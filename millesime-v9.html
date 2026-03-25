@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Millésime — Votre cave numérique</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1825;--bg2:#13202f;--bg3:#192840;--bg4:#1f3050;
+  --slate:#2e4560;--or:#C9A84C;--or2:#dfc06a;--or3:rgba(201,168,76,.14);--or4:rgba(201,168,76,.07);
+  --t1:#EEF2F7;--t2:#8FA8C4;--t3:#4E6A84;
+  --line:rgba(255,255,255,.07);--line2:rgba(201,168,76,.25);
+  --sh:0 2px 12px rgba(8,16,28,.4);--sh2:0 8px 32px rgba(8,16,28,.5);--sh3:0 20px 60px rgba(8,16,28,.6);
+  --r:8px;--rl:14px;--rxl:20px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.65;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--slate);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--or)}
+
+/* PAGE TRANSITIONS */
+.page{display:none;animation:fadeUp .35s ease forwards}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.app-hidden{display:none!important}
+
+/* ── HEADER ── */
+header{background:rgba(13,23,36,.97);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:300;backdrop-filter:blur(18px)}
+.nav-wrap{max-width:1320px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:68px}
+.logo{display:flex;align-items:center;gap:11px;cursor:pointer;user-select:none}
+.logo-mark{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--or);background:var(--or4);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(201,168,76,.12);transition:box-shadow .3s}
+.logo-mark:hover{box-shadow:0 0 28px rgba(201,168,76,.22)}
+.logo-text{font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:var(--or);letter-spacing:.04em}
+.logo-sub{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--t3);margin-top:1px}
+nav{display:flex;gap:1px}
+.nb{background:none;border:none;color:var(--t2);font-family:'Lato',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:9px 14px;border-radius:6px;cursor:pointer;transition:all .18s}
+.nb:hover{color:var(--t1);background:rgba(255,255,255,.05)}
+.nb.active{color:var(--or);background:var(--or4)}
+.nav-r{display:flex;align-items:center;gap:8px}
+.nav-icon{width:36px;height:36px;border-radius:50%;background:none;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative}
+.nav-icon:hover{border-color:var(--or);background:var(--or4)}
+.nav-badge{position:absolute;top:5px;right:5px;width:15px;height:15px;border-radius:50%;background:var(--or);color:var(--bg);font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+.nav-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--or);border:2px solid var(--bg)}
+.btn-publish{background:var(--or);color:var(--bg);border:none;padding:9px 22px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .22s;display:inline-flex;align-items:center;gap:7px}
+.btn-publish:hover{background:var(--or2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,.3)}
+.nav-av{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--or);display:flex;align-items:center;justify-content:center;color:var(--or);font-family:'Playfair Display',serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.nav-av:hover{box-shadow:0 0 0 4px rgba(201,168,76,.15)}
+
+/* USER NAV STATE — shown when logged in */
+.nav-loggedin{display:none}
+.nav-loggedout{display:flex;align-items:center;gap:8px}
+.btn-login{background:none;border:1px solid var(--line);color:var(--t2);padding:8px 18px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-login:hover{border-color:var(--or);color:var(--or)}
+
+/* ── SECTIONS ── */
+.section{max-width:1320px;margin:0 auto;padding:72px 40px}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:36px}
+.section-title{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--t1)}
+.section-title em{color:var(--or);font-style:italic}
+.section-sub{font-size:13px;color:var(--t3);margin-top:4px}
+.section-link{background:none;border:none;color:var(--or);font-family:'Lato',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:6px;transition:gap .2s}
+.section-link:hover{gap:10px}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--line2),transparent);max-width:1320px;margin:0 auto}
+
+/* ── HERO ── */
+.hero{position:relative;overflow:hidden;min-height:88vh;display:flex;align-items:center}
+.hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=1600&q=85') center/cover;transform:scale(1.03);transition:transform 10s ease}
+.hero:hover .hero-bg{transform:scale(1.0)}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(110deg,rgba(10,18,30,.93) 0%,rgba(10,18,30,.78) 45%,rgba(10,18,30,.55) 100%)}
+.hero-inner{max-width:1320px;margin:0 auto;padding:100px 40px 80px;position:relative;z-index:1;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--or);font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:6px 16px;border-radius:30px;margin-bottom:24px}
+.hero h1{font-family:'Playfair Display',serif;font-size:58px;font-weight:700;color:var(--t1);line-height:1.1;margin-bottom:20px}
+.hero h1 em{color:var(--or);font-style:italic}
+.hero p{color:var(--t2);font-size:17px;font-weight:300;line-height:1.8;margin-bottom:34px;max-width:460px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn-hp{background:var(--or);color:var(--bg);border:none;padding:15px 32px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:9px}
+.btn-hp:hover{background:var(--or2);transform:translateY(-2px);box-shadow:0 10px 32px rgba(201,168,76,.35)}
+.btn-hs{background:rgba(255,255,255,.08);color:var(--t1);border:1px solid rgba(255,255,255,.2);padding:15px 32px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .25s;backdrop-filter:blur(8px)}
+.btn-hs:hover{border-color:var(--or);color:var(--or);background:rgba(201,168,76,.06)}
+.hero-cards{display:flex;flex-direction:column;gap:12px}
+.hcard{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:var(--rl);padding:14px 16px;backdrop-filter:blur(16px);display:flex;align-items:center;gap:13px;cursor:pointer;transition:all .28s}
+.hcard:hover{background:rgba(255,255,255,.11);border-color:rgba(201,168,76,.35);transform:translateX(4px)}
+.hcard-thumb{width:48px;height:48px;border-radius:9px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.1)}
+.hcard-thumb img{width:100%;height:100%;object-fit:cover}
+.hcard-name{font-family:'Playfair Display',serif;font-size:13px;color:var(--t1);font-weight:600;line-height:1.2}
+.hcard-meta{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
+.hcard-score{font-size:11px;color:var(--or);font-weight:700;margin-top:2px}
+.hcard-rank{margin-left:auto;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:var(--or);font-size:9px;font-weight:900;padding:3px 9px;border-radius:20px;letter-spacing:.06em;font-family:'Playfair Display',serif;flex-shrink:0}
+
+/* ── TRENDING ── */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+.tw{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .28s;box-shadow:var(--sh)}
+.tw:hover{transform:translateY(-5px);box-shadow:var(--sh3);border-color:rgba(201,168,76,.3)}
+.tw-img{height:150px;position:relative;overflow:hidden}
+.tw-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.tw:hover .tw-img img{transform:scale(1.06)}
+.tw-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(13,20,30,.85) 0%,transparent 60%)}
+.tw-rank{position:absolute;top:10px;left:10px;background:rgba(13,20,30,.85);border:1px solid rgba(201,168,76,.35);color:var(--or);font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;font-family:'Playfair Display',serif}
+.tw-yr{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.12);color:var(--t1);font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;backdrop-filter:blur(6px)}
+.tw-body{padding:14px 16px 16px}
+.tw-name{font-family:'Playfair Display',serif;font-size:14px;color:var(--t1);font-weight:600;line-height:1.3;margin-bottom:2px}
+.tw-prod{font-size:11px;color:var(--t3);margin-bottom:9px}
+.tw-foot{display:flex;justify-content:space-between;align-items:center}
+.tw-score{color:var(--or);font-size:13px;font-weight:700}
+.tw-badge{background:var(--or4);border:1px solid var(--line2);color:var(--or);font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase}
+.tw-taste{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:11px;color:var(--t2);line-height:1.5;font-style:italic}
+
+/* ── FEED STRIP ── */
+.feed-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.fsc{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .25s;box-shadow:var(--sh)}
+.fsc:hover{box-shadow:var(--sh2);transform:translateY(-3px);border-color:rgba(201,168,76,.2)}
+.fsc-bar{height:3px}
+.fsc-body{padding:18px 20px}
+.fsc-ur{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.fsc-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.fsc-un{font-weight:700;font-size:13px;color:var(--t1)}
+.fsc-time{font-size:10px;color:var(--t3);margin-top:1px}
+.fsc-wine{display:flex;gap:11px;margin-bottom:10px}
+.fsc-thumb{width:44px;height:44px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid var(--line)}
+.fsc-thumb img{width:100%;height:100%;object-fit:cover}
+.fsc-wname{font-family:'Playfair Display',serif;font-size:15px;color:var(--t1)}
+.fsc-wapp{font-size:10px;color:var(--t3);margin-top:2px}
+.fsc-stars{display:flex;gap:2px;margin-top:3px}
+.fsc-star{font-size:11px}.fsc-star.lit{color:var(--or)}.fsc-star.dim{color:var(--line)}
+.fsc-text{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:9px;font-style:italic}
+.fsc-tags{display:flex;gap:5px;flex-wrap:wrap}
+.fsc-tag{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--t3);font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;text-transform:uppercase}
+.fsc-actions{display:flex;gap:5px;padding-top:10px;border-top:1px solid var(--line);margin-top:10px}
+.fsc-action{background:none;border:1px solid transparent;color:var(--t3);font-family:'Lato',sans-serif;font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.fsc-action:hover{background:var(--or4);color:var(--or);border-color:var(--line2)}
+.fsc-action.liked{color:var(--or);background:var(--or4);border-color:var(--line2)}
+
+/* ── NEWS ── */
+.news-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.news-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .25s;box-shadow:var(--sh);display:flex;gap:0}
+.news-card:hover{box-shadow:var(--sh2);transform:translateY(-3px);border-color:rgba(201,168,76,.22)}
+.news-card.featured{grid-column:1/-1;flex-direction:row}
+.news-img{flex-shrink:0;position:relative;overflow:hidden}
+.news-card.featured .news-img{width:380px;height:240px}
+.news-card:not(.featured) .news-img{width:120px;height:100%}
+.news-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.news-card:hover .news-img img{transform:scale(1.05)}
+.news-ov{position:absolute;inset:0;background:linear-gradient(to right,transparent,rgba(13,20,30,.2))}
+.news-cat{position:absolute;bottom:10px;left:10px;background:var(--or);color:var(--bg);font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.1em;text-transform:uppercase}
+.news-body{padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between;flex:1}
+.news-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--t1);line-height:1.35;margin-bottom:8px;font-weight:600}
+.news-card.featured .news-title{font-size:22px}
+.news-excerpt{font-size:12px;color:var(--t2);line-height:1.6;flex:1}
+.news-meta{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:10px;color:var(--t3)}
+.news-author-av{width:20px;height:20px;border-radius:50%;background:var(--bg3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--t2)}
+.news-read{margin-left:auto;color:var(--or);font-size:10px;font-weight:700;display:flex;align-items:center;gap:4px}
+
+/* ── VIDEO ── */
+.vsec{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:64px 0}
+.vsec-inner{max-width:1320px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.vplayer{position:relative;border-radius:var(--rl);overflow:hidden;height:280px;cursor:pointer;border:1px solid var(--line);transition:border-color .25s}
+.vplayer:hover{border-color:rgba(201,168,76,.4)}
+.vplayer img{width:100%;height:100%;object-fit:cover;filter:brightness(.5);transition:filter .3s}
+.vplayer:hover img{filter:brightness(.4)}
+.vplay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(201,168,76,.12);border:2px solid rgba(201,168,76,.45);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:all .25s}
+.vplayer:hover .vplay{background:var(--or);border-color:var(--or)}
+.vplayer:hover .vplay svg{stroke:var(--bg)}
+.vsoon{position:absolute;top:14px;right:14px;background:rgba(13,20,30,.8);border:1px solid rgba(201,168,76,.3);color:var(--or);font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.12em;text-transform:uppercase}
+.vcontent h3{font-family:'Playfair Display',serif;font-size:30px;color:var(--t1);margin-bottom:14px;line-height:1.2}
+.vcontent h3 em{color:var(--or);font-style:italic}
+.vcontent p{font-size:15px;color:var(--t2);line-height:1.75;font-weight:300;margin-bottom:22px}
+.vfeats{display:flex;flex-direction:column;gap:10px}
+.vf{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--t2)}
+.vf-dot{width:5px;height:5px;border-radius:50%;background:var(--or);margin-top:6px;flex-shrink:0}
+
+/* ── INNER PAGES ── */
+.inner{max-width:1320px;margin:0 auto;padding:40px}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px}
+.ph h2{font-family:'Playfair Display',serif;font-size:28px;color:var(--t1)}
+.ph-sub{font-size:12px;color:var(--t3);margin-top:3px}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.sc{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);padding:18px 20px;border-top:3px solid var(--or);box-shadow:var(--sh)}
+.sc-n{font-family:'Playfair Display',serif;font-size:32px;color:var(--or);font-weight:700}
+.sc-l{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-top:5px}
+.filters{display:flex;gap:8px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.chip{background:var(--bg2);border:1px solid var(--line);color:var(--t2);padding:7px 16px;border-radius:30px;font-size:11px;font-family:'Lato',sans-serif;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px}
+.chip:hover{border-color:var(--or);color:var(--or)}
+.chip.active{background:var(--or);border-color:var(--or);color:var(--bg)}
+.chip-dot{width:7px;height:7px;border-radius:50%}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.wcard{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .28s;box-shadow:var(--sh)}
+.wcard:hover{transform:translateY(-4px);box-shadow:var(--sh3);border-color:rgba(201,168,76,.3)}
+.wcard-img{height:130px;position:relative;overflow:hidden}
+.wcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+.wcard:hover .wcard-img img{transform:scale(1.06)}
+.wcard-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(13,20,30,.65) 0%,transparent 60%)}
+.wcard-yr{position:absolute;top:8px;right:8px;background:rgba(13,20,30,.85);border:1px solid rgba(201,168,76,.3);color:var(--or);font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px}
+.wcard-body{padding:12px 14px 14px}
+.wcard-name{font-family:'Playfair Display',serif;font-size:14px;color:var(--t1);line-height:1.3;margin-bottom:2px;font-weight:600}
+.wcard-prod{font-size:11px;color:var(--t3);margin-bottom:9px}
+.wcard-foot{display:flex;justify-content:space-between;align-items:center}
+.wcard-score{color:var(--or);font-size:13px;font-weight:700}
+.wcard-qty{background:var(--bg3);border:1px solid var(--line);color:var(--t2);font-size:10px;padding:3px 9px;border-radius:5px;font-weight:700}
+
+/* ── CAVE TABS ── */
+.cave-tab{background:none;border:1px solid var(--line);color:var(--t2);padding:8px 16px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:7px}
+.cave-tab:hover{border-color:var(--or);color:var(--or)}
+.cave-tab.active{background:var(--bg3);border-color:var(--or);color:var(--or)}
+.plat-btn{background:var(--bg3);border:1px solid var(--line);color:var(--t2);padding:7px 13px;border-radius:20px;font-family:'Lato',sans-serif;font-size:12px;cursor:pointer;transition:all .18s}
+.plat-btn:hover,.plat-btn.active-plat{background:var(--or4);border-color:var(--line2);color:var(--or)}
+.accord-card{background:var(--bg2);border:1.5px solid var(--line);border-radius:var(--rl);overflow:hidden;transition:all .22s;position:relative}
+.accord-card:hover{border-color:rgba(201,168,76,.4);transform:translateY(-3px);box-shadow:var(--sh2)}
+.accord-match{position:absolute;top:8px;left:8px;background:var(--or);color:var(--bg);font-size:9px;font-weight:900;padding:3px 8px;border-radius:10px;letter-spacing:.06em;text-transform:uppercase}
+.accord-why{font-size:11px;color:var(--or);font-style:italic;padding:0 12px 12px;line-height:1.4}
+.stat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.stat-bar-label{width:110px;color:var(--t2);flex-shrink:0;font-size:12px}
+.stat-bar-track{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:4px;background:var(--or);transition:width .6s ease}
+.stat-bar-val{width:32px;text-align:right;color:var(--t3);font-size:11px;font-weight:700}
+
+/* ── COMMUNITY ── */
+.feed-layout{display:grid;grid-template-columns:1fr 280px;gap:22px}
+.full-feed{display:flex;flex-direction:column;gap:14px}
+.ffc{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh);transition:all .22s}
+.ffc:hover{box-shadow:var(--sh2);transform:translateY(-2px)}
+.ffc-bar{height:3px}
+.ffc-body{padding:18px 20px}
+.ffc-ur{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+.ffc-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.ffc-un{font-weight:700;font-size:14px;color:var(--t1)}
+.ffc-time{font-size:10px;color:var(--t3);margin-top:1px}
+.ffc-wine{display:flex;gap:13px;margin-bottom:11px}
+.ffc-thumb{width:52px;height:52px;border-radius:9px;overflow:hidden;flex-shrink:0;border:1px solid var(--line)}
+.ffc-thumb img{width:100%;height:100%;object-fit:cover}
+.ffc-wname{font-family:'Playfair Display',serif;font-size:17px;color:var(--t1)}
+.ffc-wapp{font-size:11px;color:var(--t3);margin-top:2px}
+.ffc-stars{display:flex;gap:2px;margin-top:4px}
+.ffc-star{font-size:12px}.ffc-star.lit{color:var(--or)}.ffc-star.dim{color:var(--line)}
+.ffc-text{font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:11px;font-style:italic}
+.ffc-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.ffc-tag{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--t3);font-size:9px;padding:3px 8px;border-radius:20px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.ffc-actions{display:flex;gap:5px;padding-top:11px;border-top:1px solid var(--line)}
+.ffc-action{background:none;border:1px solid transparent;color:var(--t3);font-family:'Lato',sans-serif;font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;font-weight:700}
+.ffc-action:hover{background:var(--or4);color:var(--or);border-color:var(--line2)}
+.ffc-action.liked{color:var(--or);background:var(--or4);border-color:var(--line2)}
+.widget{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);padding:18px 20px;box-shadow:var(--sh);margin-bottom:14px}
+.widget-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--or);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.sug-i{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.sug-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.sug-name{font-size:13px;font-weight:700;color:var(--t1)}
+.sug-sub{font-size:10px;color:var(--t3)}
+.btn-follow{margin-left:auto;background:none;border:1px solid var(--line2);color:var(--or);padding:4px 11px;border-radius:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;transition:all .15s;font-family:'Lato',sans-serif}
+.btn-follow:hover,.btn-follow.following{background:var(--or4)}
+
+/* ── PROFILE ── */
+.prof-hero{position:relative;border-radius:var(--rl);overflow:hidden;margin-bottom:26px;box-shadow:var(--sh2)}
+.prof-bg{height:180px;background:url('https://images.unsplash.com/photo-1474722883778-792e7990302f?w=1200&q=80') center/cover;filter:brightness(.5)}
+.prof-content{background:var(--bg2);border:1px solid var(--line);border-top:none;border-radius:0 0 var(--rl) var(--rl);padding:0 30px 28px}
+.prof-av{width:80px;height:80px;border-radius:50%;background:var(--bg3);border:4px solid var(--bg2);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:30px;color:var(--or);font-weight:700;margin-top:-40px;box-shadow:var(--sh2);position:relative;z-index:1}
+.prof-name{font-family:'Playfair Display',serif;font-size:24px;color:var(--t1);margin-top:12px}
+.prof-bio{font-size:14px;color:var(--t2);margin-top:4px;font-weight:300}
+.prof-stats{display:flex;gap:28px;margin-top:14px}
+.ps-n{font-family:'Playfair Display',serif;font-size:22px;color:var(--or);font-weight:700}
+.ps-l{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+
+/* ── BUTTONS ── */
+.btn-p{background:var(--or);color:var(--bg);border:none;padding:11px 22px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-p:hover{background:var(--or2);transform:translateY(-1px)}
+.btn-s{background:none;color:var(--t2);border:1px solid var(--line);padding:11px 22px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-s:hover{border-color:var(--or);color:var(--or)}
+.btn-del{background:none;border:1px solid rgba(220,80,60,.25);color:rgba(220,120,100,.8);padding:9px 16px;border-radius:7px;cursor:pointer;font-family:'Lato',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;transition:all .18s}
+.btn-del:hover{background:rgba(220,80,60,.08);border-color:rgba(220,80,60,.45)}
+
+/* ── MESSAGING ── */
+.conv-list{position:fixed;bottom:0;right:380px;width:280px;background:var(--bg2);border:1px solid var(--line);border-bottom:none;border-radius:var(--rl) var(--rl) 0 0;box-shadow:var(--sh3);z-index:399;display:none;flex-direction:column;max-height:380px}
+.conv-list.open{display:flex}
+.conv-header{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border-radius:var(--rl) var(--rl) 0 0}
+.conv-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--or)}
+.conv-close-btn{background:none;border:none;color:var(--t3);font-size:16px;cursor:pointer;line-height:1;transition:color .15s}
+.conv-close-btn:hover{color:var(--t1)}
+.conv-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--line)}
+.conv-item:hover{background:var(--bg3)}
+.conv-item:last-child{border-bottom:none}
+.conv-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.conv-name{font-size:13px;font-weight:700;color:var(--t1)}
+.conv-preview{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.conv-unread{width:18px;height:18px;border-radius:50%;background:var(--or);color:var(--bg);font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0}
+.msg-panel{position:fixed;bottom:0;right:24px;width:340px;background:var(--bg2);border:1px solid var(--line);border-bottom:none;border-radius:var(--rl) var(--rl) 0 0;box-shadow:var(--sh3);z-index:400;display:none;flex-direction:column;max-height:460px}
+.msg-panel.open{display:flex}
+.msg-header{display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--bg3);border-radius:var(--rl) var(--rl) 0 0;border-bottom:1px solid var(--line);cursor:pointer}
+.msg-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.msg-hname{font-size:14px;font-weight:700;color:var(--t1);flex:1}
+.msg-online{width:8px;height:8px;border-radius:50%;background:#4caf50;flex-shrink:0}
+.msg-hclose{background:none;border:none;color:var(--t3);font-size:16px;cursor:pointer;line-height:1;padding:2px 4px;transition:color .15s}
+.msg-hclose:hover{color:var(--t1)}
+.msg-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.msg-bubble{max-width:80%;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.5}
+.msg-bubble.them{background:var(--bg3);border:1px solid var(--line);color:var(--t1);align-self:flex-start;border-radius:4px 12px 12px 12px}
+.msg-bubble.me{background:var(--or);color:var(--bg);align-self:flex-end;border-radius:12px 4px 12px 12px;font-weight:700}
+.msg-time{font-size:10px;color:var(--t3);text-align:center;margin:2px 0}
+.msg-footer{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:flex-end;background:var(--bg2)}
+.msg-input{flex:1;border:1px solid var(--line);border-radius:20px;padding:8px 14px;font-family:'Lato',sans-serif;font-size:13px;color:var(--t1);background:var(--bg3);outline:none;resize:none;max-height:80px;transition:border .2s;line-height:1.4}
+.msg-input:focus{border-color:var(--or)}
+.msg-send{width:34px;height:34px;border-radius:50%;background:var(--or);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s}
+.msg-send:hover{background:var(--or2)}
+
+/* ── MODALS ── */
+.mo{position:fixed;inset:0;background:rgba(6,12,22,.75);z-index:500;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(6px)}
+.mo.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rxl);width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh3)}
+.mh{background:var(--bg);border-bottom:1px solid var(--line);padding:20px 24px;border-radius:var(--rxl) var(--rxl) 0 0;display:flex;align-items:center;justify-content:space-between}
+.mh h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--or);display:flex;align-items:center;gap:10px}
+.mclose{background:rgba(255,255,255,.06);border:none;color:var(--t2);width:28px;height:28px;border-radius:50%;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.mclose:hover{background:rgba(255,255,255,.12);color:var(--t1)}
+.mb{padding:22px 24px}
+.mf{padding:0 24px 22px;display:flex;gap:10px;justify-content:flex-end}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.fg.full{grid-column:1/-1}
+label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);display:block;margin-bottom:5px}
+input,select,textarea{background:var(--bg3);border:1px solid var(--line);color:var(--t1);border-radius:var(--r);padding:11px 13px;font-family:'Lato',sans-serif;font-size:14px;width:100%;outline:none;transition:border .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(201,168,76,.1)}
+input::placeholder,textarea::placeholder{color:var(--t3)}
+textarea{resize:vertical;min-height:76px}
+select option{background:var(--bg2)}
+.cpick{display:flex;gap:8px;flex-wrap:wrap}
+.copt{display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:var(--r);border:1px solid var(--line);background:var(--bg3);color:var(--t2);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.copt:hover{border-color:var(--t2);color:var(--t1)}
+.copt.sel{border-color:var(--or);color:var(--or);background:var(--or4)}
+.cdot{width:10px;height:10px;border-radius:50%}
+
+/* AUTH */
+.auth-modal{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rxl);width:100%;max-width:440px;overflow:hidden;box-shadow:var(--sh3)}
+.auth-top{background:var(--bg);padding:32px 32px 24px;text-align:center;border-bottom:1px solid var(--line)}
+.auth-logo-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px}
+.auth-logo-m{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--or);background:var(--or4);display:flex;align-items:center;justify-content:center}
+.auth-logo-t{font-family:'Playfair Display',serif;font-size:22px;color:var(--or);font-weight:700;letter-spacing:.04em}
+.auth-tagline{font-size:13px;color:var(--t3);font-weight:300}
+.auth-tabs-wrap{padding:16px 28px 0}
+.auth-tabs{display:flex;background:var(--bg3);border-radius:10px;padding:3px}
+.auth-tab{flex:1;padding:9px;text-align:center;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);transition:all .2s;border:none;background:none;font-family:'Lato',sans-serif}
+.auth-tab.active{background:var(--bg4);color:var(--t1);box-shadow:var(--sh)}
+.auth-body{padding:24px 28px}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--line)}
+.btn-oauth{width:100%;background:var(--bg3);border:1px solid var(--line);color:var(--t1);padding:11px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.btn-oauth:hover{border-color:var(--or);background:var(--or4)}
+.auth-terms{font-size:11px;color:var(--t3);text-align:center;margin-top:16px;line-height:1.5}
+.auth-terms span{color:var(--or);cursor:pointer}
+
+/* QUICK POST */
+.qp-modal{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rxl);width:100%;max-width:600px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--sh3)}
+.qp-header{display:flex;align-items:center;padding:16px 22px;border-bottom:1px solid var(--line);position:relative;background:var(--bg)}
+.qp-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--or);position:absolute;left:50%;transform:translateX(-50%)}
+.qp-steps-wrap{display:flex;gap:5px;margin-left:auto}
+.qp-step{width:24px;height:3px;border-radius:2px;background:var(--line);transition:background .3s}
+.qp-step.done{background:var(--or)}
+.qp-step.active{background:var(--t2)}
+.qp-body{flex:1;overflow-y:auto;padding:22px 24px}
+.wine-search-wrap{position:relative;margin-bottom:18px}
+.wine-search-input{background:var(--bg3);border:1px solid var(--line);color:var(--t1);border-radius:var(--r);padding:13px 16px 13px 44px;font-family:'Lato',sans-serif;font-size:15px;width:100%;outline:none;transition:all .2s}
+.wine-search-input:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(201,168,76,.1)}
+.wine-search-input::placeholder{color:var(--t3)}
+.wine-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%)}
+.wine-suggestions{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:none;position:absolute;top:calc(100%+6px);left:0;right:0;z-index:10;box-shadow:var(--sh2)}
+.wine-suggestions.open{display:block}
+.ws-item{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--line)}
+.ws-item:last-child{border-bottom:none}
+.ws-item:hover{background:var(--bg3)}
+.ws-thumb{width:36px;height:36px;border-radius:6px;overflow:hidden;flex-shrink:0;border:1px solid var(--line)}
+.ws-thumb img{width:100%;height:100%;object-fit:cover}
+.ws-name{font-size:14px;color:var(--t1);font-weight:700}
+.ws-meta{font-size:11px;color:var(--t3)}
+.ws-type{margin-left:auto;font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 9px;border-radius:10px;flex-shrink:0}
+.ws-type.rouge{background:rgba(139,32,32,.25);color:#e8a0a0}
+.ws-type.blanc{background:rgba(180,150,10,.2);color:#d4c870}
+.ws-type.rosé{background:rgba(160,80,96,.2);color:#e8b0b8}
+.ws-type.effervescent{background:rgba(80,120,32,.2);color:#b0d060}
+.sel-wine{display:flex;align-items:center;gap:13px;background:var(--bg3);border:1px solid rgba(201,168,76,.2);border-radius:var(--rl);padding:13px 15px;margin-bottom:18px}
+.sel-wine-img{width:52px;height:52px;border-radius:9px;overflow:hidden;flex-shrink:0;border:1px solid var(--line)}
+.sel-wine-img img{width:100%;height:100%;object-fit:cover}
+.sel-wine-name{font-family:'Playfair Display',serif;font-size:16px;color:var(--t1);font-weight:600}
+.sel-wine-meta{font-size:12px;color:var(--t3);margin-top:2px}
+.sel-change{margin-left:auto;background:none;border:1px solid var(--line);color:var(--t3);padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'Lato',sans-serif;transition:all .15s}
+.sel-change:hover{border-color:var(--or);color:var(--or)}
+.rating-big{display:flex;gap:6px;margin:14px 0 4px}
+.rb-star{font-size:36px;cursor:pointer;color:var(--line);transition:all .15s;line-height:1}
+.rb-star.lit{color:var(--or)}.rb-star:hover{transform:scale(1.12)}
+.rating-label{font-size:12px;color:var(--t3);margin-bottom:14px;font-style:italic;min-height:18px}
+.taste-tags{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 16px}
+.taste-tag{background:var(--bg3);border:1px solid var(--line);color:var(--t2);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;font-family:'Lato',sans-serif}
+.taste-tag:hover,.taste-tag.active{background:var(--or4);border-color:var(--line2);color:var(--or)}
+.post-text{background:var(--bg3);border:1px solid var(--line);color:var(--t1);border-radius:var(--r);padding:13px 15px;font-family:'Lato',sans-serif;font-size:14px;width:100%;resize:none;min-height:90px;outline:none;transition:border .2s;line-height:1.6}
+.post-text:focus{border-color:var(--or)}
+.post-text::placeholder{color:var(--t3)}
+.char-count{font-size:11px;color:var(--t3);text-align:right;margin-top:5px}
+.vis-toggle{display:flex;gap:8px;margin-top:14px}
+.vis-opt{flex:1;background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .15s;text-align:center}
+.vis-opt:hover,.vis-opt.sel{border-color:var(--or);background:var(--or4)}
+.vis-opt-label{font-size:11px;font-weight:700;color:var(--t1);letter-spacing:.05em;margin-top:4px}
+.vis-opt-sub{font-size:10px;color:var(--t3);margin-top:1px}
+.qp-footer{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;background:var(--bg)}
+.qp-prog{font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.qp-next{background:var(--or);color:var(--bg);border:none;padding:11px 28px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-left:auto}
+.qp-next:hover{background:var(--or2)}
+.qp-back{background:none;color:var(--t2);border:1px solid var(--line);padding:11px 20px;border-radius:var(--r);font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.qp-back:hover{border-color:var(--t2);color:var(--t1)}
+
+/* DETAIL PANEL */
+.dp-ov{position:fixed;inset:0;z-index:300;display:none}.dp-ov.open{display:flex}
+.dp-bg{flex:1;background:rgba(6,12,22,.55);cursor:pointer}
+.dp{width:400px;background:var(--bg2);border-left:1px solid var(--line);height:100%;overflow-y:auto;box-shadow:var(--sh3)}
+.dph{position:relative;height:180px;overflow:hidden}
+.dph img{width:100%;height:100%;object-fit:cover;filter:brightness(.65)}
+.dph-ov{position:absolute;inset:0;background:linear-gradient(to top,var(--bg2) 0%,transparent 55%)}
+.dp-close{position:absolute;top:12px;right:12px;background:rgba(13,20,30,.7);border:none;color:var(--t1);width:28px;height:28px;border-radius:50%;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .15s}
+.dp-close:hover{background:rgba(13,20,30,.9)}
+.dph-content{position:absolute;bottom:0;left:0;right:0;padding:16px 22px}
+.dp-name{font-family:'Playfair Display',serif;font-size:20px;color:var(--t1);font-weight:700}
+.dp-app{font-size:12px;color:var(--t2);margin-top:3px}
+.dpb{padding:18px 22px}
+.dpg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+.di{background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:9px 11px}
+.di-l{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--t3);font-weight:700;margin-bottom:2px}
+.di-v{font-size:14px;font-weight:700;color:var(--t1)}
+.dsect{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:var(--t3);font-weight:700;margin:16px 0 9px;padding-bottom:7px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px}
+.dsect::before{content:'';display:inline-block;width:2px;height:10px;background:var(--or);border-radius:2px}
+.tcard{background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:8px}
+.tcard-h{display:flex;justify-content:space-between;margin-bottom:6px}
+.tscore{color:var(--or);font-size:12px;font-weight:700}
+.tdate{font-size:10px;color:var(--t3)}
+.tline{font-size:12px;color:var(--t2);margin-bottom:3px;line-height:1.5}
+.tline strong{color:var(--t1);font-weight:700}
+.dpactions{display:flex;gap:9px;margin-top:16px}
+.stars{display:flex;gap:4px}
+.star{font-size:26px;cursor:pointer;color:var(--line);transition:all .12s;line-height:1}
+.star.lit{color:var(--or)}.star:hover{transform:scale(1.2)}
+
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);z-index:999;background:var(--bg3);border:1px solid var(--line2);border-left:3px solid var(--or);color:var(--t1);padding:13px 22px;border-radius:30px;font-size:13px;box-shadow:var(--sh3);opacity:0;pointer-events:none;transition:all .32s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:10px;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.empty{text-align:center;padding:60px 20px;background:var(--bg2);border:1px dashed var(--line);border-radius:var(--rl)}
+.empty-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--t2);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--t3);margin-bottom:20px}
+
+/* LOCKED OVERLAY — for content requiring login */
+.locked{position:relative}
+.locked-overlay{position:absolute;inset:0;background:rgba(14,24,37,.85);backdrop-filter:blur(4px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:var(--rl);gap:12px}
+.locked-overlay svg{opacity:.6}
+.locked-msg{font-family:'Playfair Display',serif;font-size:18px;color:var(--t1);text-align:center}
+.locked-sub{font-size:13px;color:var(--t2);text-align:center;max-width:280px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+<div class="nav-wrap">
+  <div class="logo" onclick="goHome()">
+    <div class="logo-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C10 4 8 6 8 8.5a4 4 0 008 0C16 6 14 4 12 2z"/><path d="M8 22h8M12 14v8M6.6 7c-.9 1.4-1 3.2-.3 4.8C7.1 13.4 8.5 14 12 14s4.9-.6 5.7-2.2c.7-1.6.6-3.4-.3-4.8"/></svg></div>
+    <div><div class="logo-text">Millésime</div><div class="logo-sub">Cave &amp; Dégustation</div></div>
+  </div>
+  <nav id="main-nav" style="display:none">
+    <button class="nb active" onclick="showPage('home',this)">Accueil</button>
+    <button class="nb" onclick="showPage('cave',this)">Ma Cave</button>
+    <button class="nb" onclick="showPage('community',this)">Communauté</button>
+    <button class="nb" onclick="showPage('news',this)">Actualités</button>
+    <button class="nb" onclick="showPage('decouverte',this)">Découverte</button>
+    <button class="nb" onclick="showPage('profile',this)">Profil</button>
+  </nav>
+  <!-- LOGGED OUT -->
+  <div class="nav-loggedout" id="nav-out">
+    <button class="btn-login" onclick="openAuth('login')">Se connecter</button>
+    <button class="btn-publish" onclick="openAuth('signup')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>Créer un compte</button>
+  </div>
+  <!-- LOGGED IN -->
+  <div class="nav-loggedin" id="nav-in">
+    <div class="nav-r">
+      <div class="nav-icon" title="Notifications" onclick="toast('3 nouvelles notifications')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <div class="nav-dot"></div>
+      </div>
+      <div class="nav-icon" title="Messages" onclick="toggleConvList()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <div class="nav-badge">2</div>
+      </div>
+      <button class="btn-publish" onclick="openQuickPost()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>Publier</button>
+      <div class="nav-av" id="nav-avatar" onclick="showPage('profile',null)">M</div>
+    </div>
+  </div>
+</div>
+</header>
+
+<!-- ══ HOME ══ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-inner">
+      <div>
+        <div class="hero-tag"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C10 4 8 6 8 8.5a4 4 0 008 0C16 6 14 4 12 2z"/></svg>Votre cave numérique</div>
+        <h1>Votre univers du vin,<br><em>à portée de main.</em></h1>
+        <p>Gérez votre cave, partagez vos dégustations et rejoignez une communauté de passionnés autour d'un verre.</p>
+        <div class="hero-btns" id="hero-ctas">
+          <button class="btn-hp" onclick="openAuth('signup')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM19 8v6M22 11h-6"/></svg>Créer mon compte</button>
+          <button class="btn-hs" onclick="openAuth('login')">Se connecter</button>
+        </div>
+      </div>
+      <div id="hero-cards"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><div><div class="section-title">En vogue <em>cette semaine</em></div><div class="section-sub">Les vins les plus partagés et notés par la communauté</div></div><button class="section-link" onclick="showPage('decouverte',null)">Voir tout <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div>
+    <div class="tgrid" id="trending-grid"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-head"><div><div class="section-title">La communauté <em>déguste</em></div><div class="section-sub">Dernières dégustations partagées</div></div><button class="section-link" onclick="showPage('community',null)">Voir tout <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div>
+    <div class="feed-strip" id="feed-strip"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- NEWS PREVIEW -->
+  <div class="section">
+    <div class="section-head"><div><div class="section-title">Actualités <em>du vin</em></div><div class="section-sub">Articles, nouvelles sorties, documentaires</div></div><button class="section-link" onclick="showPage('news',null)">Toutes les actualités <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div>
+    <div class="news-grid" id="news-preview"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="vsec">
+    <div class="vsec-inner">
+      <div class="vplayer"><img src="https://images.unsplash.com/photo-1474722883778-792e7990302f?w=800&q=80" alt="cave"><div class="vplay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><div class="vsoon">Bientôt</div></div>
+      <div class="vcontent"><h3>Partagez vos dégustations <em>en vidéo</em></h3><p>Bientôt, publiez de courtes vidéos de vos dégustations directement depuis votre cave. Commentez, analysez, faites découvrir.</p><div class="vfeats"><div class="vf"><div class="vf-dot"></div>Vidéos courtes de dégustation (30 à 90 sec)</div><div class="vf"><div class="vf-dot"></div>Associées automatiquement à votre bouteille</div><div class="vf"><div class="vf-dot"></div>Réactions et commentaires de la communauté</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MA CAVE ══ -->
+<div class="page" id="page-cave">
+<div class="inner">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px">
+    <div><h2 style="font-family:'Playfair Display',serif;font-size:28px;color:var(--t1)">Ma Cave</h2><p style="font-size:12px;color:var(--t3);margin-top:3px" id="cave-sub">…</p></div>
+    <button class="btn-p" onclick="requireLogin(openAddModal)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>Ajouter une bouteille</button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:24px;border-bottom:1px solid var(--line);padding-bottom:16px">
+    <button class="cave-tab active" onclick="switchCaveTab('cave',this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M8 7V5a2 2 0 00-4 0v2"/></svg>Mes bouteilles</button>
+    <button class="cave-tab" onclick="switchCaveTab('accord',this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3zM3 10h18M9 14h6M9 18h6"/></svg>Accord mets &amp; vin</button>
+    <button class="cave-tab" onclick="switchCaveTab('stats',this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Statistiques</button>
+  </div>
+
+  <!-- Mes bouteilles -->
+  <div id="cave-panel-cave">
+    <div class="sg"><div class="sc"><div class="sc-n" id="st-t">—</div><div class="sc-l">Bouteilles</div></div><div class="sc"><div class="sc-n" id="st-r">—</div><div class="sc-l">Références</div></div><div class="sc"><div class="sc-n" id="st-n">—</div><div class="sc-l">Note moy.</div></div><div class="sc"><div class="sc-n" id="st-v">—</div><div class="sc-l">Valeur</div></div></div>
+    <div class="filters"><button class="chip active" onclick="filterW('all',this)">Tous</button><button class="chip" onclick="filterW('rouge',this)"><span class="chip-dot" style="background:#8B3A3A"></span>Rouge</button><button class="chip" onclick="filterW('blanc',this)"><span class="chip-dot" style="background:#B8960C"></span>Blanc</button><button class="chip" onclick="filterW('rosé',this)"><span class="chip-dot" style="background:#B06070"></span>Rosé</button><button class="chip" onclick="filterW('effervescent',this)"><span class="chip-dot" style="background:#708020"></span>Effervescent</button></div>
+    <div id="cave-locked" class="locked" style="display:none"><div class="locked-overlay"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><div class="locked-msg">Connectez-vous pour voir votre cave</div><div class="locked-sub">Créez un compte gratuit pour gérer vos bouteilles et dégustations.</div><button class="btn-p" style="margin-top:4px" onclick="openAuth('signup')">Créer un compte</button></div><div style="height:300px"></div></div>
+    <div class="wgrid" id="wine-grid"></div>
+  </div>
+
+  <!-- Accord mets & vin -->
+  <div id="cave-panel-accord" style="display:none">
+    <div style="max-width:700px">
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);padding:28px;margin-bottom:24px">
+        <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--t1);margin-bottom:6px">Quel plat servez-vous ?</div>
+        <div style="font-size:13px;color:var(--t3);margin-bottom:20px">Décrivez votre plat — je vous propose les meilleurs vins de votre cave, puis des suggestions.</div>
+        <div style="display:flex;gap:10px;margin-bottom:16px">
+          <div style="position:relative;flex:1"><svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><path d="M3 3h18v4H3zM3 10h18M9 14h6M9 18h6"/></svg><input type="text" id="accord-input" placeholder="ex : magret de canard, fromage affiné, fruits de mer…" style="padding-left:40px;width:100%" onkeydown="if(event.key==='Enter')filterAccord()"></div>
+          <button class="btn-p" onclick="filterAccord()">Trouver</button>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);width:100%;margin-bottom:4px">Suggestions rapides</div>
+          <button class="plat-btn" onclick="setPlat(this,'viande rouge')">🥩 Viande rouge</button>
+          <button class="plat-btn" onclick="setPlat(this,'poisson')">🐟 Poisson</button>
+          <button class="plat-btn" onclick="setPlat(this,'fromage')">🧀 Fromage</button>
+          <button class="plat-btn" onclick="setPlat(this,'volaille')">🍗 Volaille</button>
+          <button class="plat-btn" onclick="setPlat(this,'pâtes truffes')">🍝 Pâtes / truffes</button>
+          <button class="plat-btn" onclick="setPlat(this,'dessert chocolat')">🍫 Dessert</button>
+          <button class="plat-btn" onclick="setPlat(this,'apéritif')">🥂 Apéritif</button>
+          <button class="plat-btn" onclick="setPlat(this,'fruits de mer')">🦪 Fruits de mer</button>
+        </div>
+      </div>
+      <div id="accord-results" style="display:none">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:14px;display:flex;align-items:center;gap:8px"><div style="flex:1;height:1px;background:var(--line)"></div><span id="accord-label">Résultats</span><div style="flex:1;height:1px;background:var(--line)"></div></div>
+        <div id="accord-cave-section" style="margin-bottom:22px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M8 7V5a2 2 0 00-4 0v2"/></svg><span style="font-size:12px;font-weight:700;color:var(--or);letter-spacing:.08em;text-transform:uppercase">Dans votre cave</span></div>
+          <div class="wgrid" id="accord-cave-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))"></div>
+        </div>
+        <div id="accord-sugg-section">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg><span style="font-size:12px;font-weight:700;color:var(--t2);letter-spacing:.08em;text-transform:uppercase">Suggestions de la base</span></div>
+          <div class="wgrid" id="accord-sugg-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div id="cave-panel-stats" style="display:none">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px"><div class="sc"><div class="sc-n" id="st2-t">—</div><div class="sc-l">Bouteilles</div></div><div class="sc"><div class="sc-n" id="st2-r">—</div><div class="sc-l">Références</div></div><div class="sc"><div class="sc-n" id="st2-n">—</div><div class="sc-l">Note moy.</div></div><div class="sc"><div class="sc-n" id="st2-v">—</div><div class="sc-l">Valeur</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);padding:22px"><div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--t1);margin-bottom:16px">Répartition par couleur</div><div id="stats-colors"></div></div>
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);padding:22px"><div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--t1);margin-bottom:16px">Top appellations</div><div id="stats-regions"></div></div>
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--rl);padding:22px;grid-column:1/-1"><div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--t1);margin-bottom:16px">Millésimes dans la cave</div><div id="stats-vintages" style="display:flex;align-items:flex-end;gap:8px;height:80px"></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ COMMUNAUTÉ ══ -->
+<div class="page" id="page-community">
+<div class="inner">
+  <div class="ph"><div><h2>Communauté</h2><p class="ph-sub">Dégustations récentes</p></div><button class="btn-p" onclick="requireLogin(openQuickPost)">Publier une dégustation</button></div>
+  <div class="feed-layout"><div class="full-feed" id="full-feed"></div>
+    <div>
+      <div class="widget"><div class="widget-title">Suggestions</div><div id="suggestions"></div></div>
+      <div class="widget"><div class="widget-title">Mes badges</div>
+        <div class="sug-i" style="gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.5"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><div><div class="sug-name">Connaisseur</div><div class="sug-sub">10 dégustations notées</div></div></div>
+        <div class="sug-i" style="gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.5"><path d="M12 2C10 4 8 6 8 8.5a4 4 0 008 0C16 6 14 4 12 2z"/></svg><div><div class="sug-name">Bourguignon</div><div class="sug-sub">5 vins de Bourgogne</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ ACTUALITÉS ══ -->
+<div class="page" id="page-news">
+<div class="inner">
+  <div class="ph"><div><h2>Actualités</h2><p class="ph-sub">Articles, nouvelles sorties, documentaires, actualités du vin</p></div></div>
+  <!-- Filters -->
+  <div class="filters">
+    <button class="chip active" onclick="filterNews('all',this)">Tout</button>
+    <button class="chip" onclick="filterNews('article',this)">Articles</button>
+    <button class="chip" onclick="filterNews('sortie',this)">Nouvelles sorties</button>
+    <button class="chip" onclick="filterNews('region',this)">Régions</button>
+    <button class="chip" onclick="filterNews('accord',this)">Accords mets-vins</button>
+  </div>
+  <div class="news-grid" id="news-full-grid"></div>
+</div>
+</div>
+
+<!-- ══ DÉCOUVERTE ══ -->
+<div class="page" id="page-decouverte"><div class="inner"><div class="ph"><div><h2>Découverte</h2><p class="ph-sub">Vins tendance cette semaine</p></div></div><div class="wgrid" id="disco-grid"></div></div></div>
+
+<!-- ══ PROFIL ══ -->
+<div class="page" id="page-profile">
+<div class="inner">
+  <div id="profile-logged-out" style="display:none">
+    <div class="empty"><div class="empty-title">Vous n'êtes pas connecté</div><div class="empty-sub">Connectez-vous pour accéder à votre profil et vos dégustations.</div><button class="btn-p" onclick="openAuth('login')">Se connecter</button></div>
+  </div>
+  <div id="profile-logged-in">
+    <div class="prof-hero">
+      <div class="prof-bg"></div>
+      <div class="prof-content">
+        <div class="prof-av" id="prof-av-letter">M</div>
+        <div class="prof-name" id="prof-name-display">Marie Dubois</div>
+        <div class="prof-bio" id="prof-bio-display">Passionnée de Bourgogne et de vins naturels. Œnophile depuis 2015.</div>
+        <div class="prof-stats">
+          <div><div class="ps-n" id="ps-b">—</div><div class="ps-l">Bouteilles</div></div>
+          <div><div class="ps-n" id="ps-deg">0</div><div class="ps-l">Dégustations</div></div>
+          <div><div class="ps-n">0</div><div class="ps-l">Abonnés</div></div>
+          <div><div class="ps-n">0</div><div class="ps-l">Abonnements</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ph" style="margin-bottom:16px"><h2 style="font-size:20px;color:var(--t1)">Mes dégustations</h2><button class="btn-p" onclick="openQuickPost()">+ Dégustation</button></div>
+    <div class="full-feed" id="profile-feed"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ AUTH MODAL ══ -->
+<div class="mo" id="modal-auth">
+<div class="auth-modal">
+  <div class="auth-top">
+    <div class="auth-logo-wrap"><div class="auth-logo-m"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.5"><path d="M12 2C10 4 8 6 8 8.5a4 4 0 008 0C16 6 14 4 12 2z"/><path d="M8 22h8M12 14v8"/></svg></div><div class="auth-logo-t">Millésime</div></div>
+    <div class="auth-tagline">Votre cave numérique</div>
+  </div>
+  <div class="auth-tabs-wrap"><div class="auth-tabs"><button class="auth-tab active" id="tab-login" onclick="switchAuth('login')">Se connecter</button><button class="auth-tab" id="tab-signup" onclick="switchAuth('signup')">Créer un compte</button></div></div>
+  <div class="auth-body">
+    <div id="auth-login">
+      <div class="fg"><label>Adresse email</label><input type="email" id="a-email" placeholder="votre@email.com"></div>
+      <div class="fg"><label>Mot de passe</label><input type="password" id="a-pass" placeholder="••••••••"><div style="text-align:right;margin-top:4px"><span style="font-size:11px;color:var(--or);cursor:pointer;font-weight:700">Mot de passe oublié ?</span></div></div>
+      <button class="btn-p" style="width:100%;justify-content:center" onclick="doLogin()">Se connecter</button>
+      <div class="auth-divider">ou</div>
+      <button class="btn-oauth" onclick="doOAuth('Google')"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continuer avec Google</button>
+      <button class="btn-oauth" onclick="doOAuth('Apple')"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--t1)"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>Continuer avec Apple</button>
+    </div>
+    <div id="auth-signup" style="display:none">
+      <div class="frow"><div class="fg"><label>Prénom</label><input type="text" id="s-first" placeholder="Marie"></div><div class="fg"><label>Nom</label><input type="text" id="s-last" placeholder="Dubois"></div></div>
+      <div class="fg"><label>Nom d'utilisateur</label><input type="text" id="s-user" placeholder="@marie.dubois"></div>
+      <div class="fg"><label>Adresse email</label><input type="email" id="s-email" placeholder="votre@email.com"></div>
+      <div class="fg"><label>Mot de passe</label><input type="password" id="s-pass" placeholder="8 caractères minimum"></div>
+      <div class="fg" style="margin-bottom:4px"><label>Vous êtes plutôt…</label><select id="s-profile"><option>Amateur passionné</option><option>Professionnel du vin</option><option>Sommelier</option><option>Collectionneur</option><option>Curieux débutant</option></select></div>
+      <button class="btn-p" style="width:100%;justify-content:center;margin-top:14px" onclick="doSignup()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM19 8v6M22 11h-6"/></svg>Créer mon compte</button>
+      <div class="auth-divider">ou</div>
+      <button class="btn-oauth" onclick="doOAuth('Google')"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continuer avec Google</button>
+    </div>
+    <div class="auth-terms">En continuant, vous acceptez nos <span>Conditions d'utilisation</span> et notre <span>Politique de confidentialité</span></div>
+  </div>
+  <div style="padding:0 28px 20px;text-align:right"><button class="btn-s" onclick="closeModal('modal-auth')" style="padding:7px 16px;font-size:11px">Fermer</button></div>
+</div>
+</div>
+
+<!-- ══ QUICK POST ══ -->
+<div class="mo" id="modal-qp">
+<div class="qp-modal">
+  <div class="qp-header">
+    <button class="mclose" onclick="closeModal('modal-qp')">✕</button>
+    <div class="qp-title" id="qp-title">Choisir un vin</div>
+    <div class="qp-steps-wrap"><div class="qp-step active" id="qps-1"></div><div class="qp-step" id="qps-2"></div><div class="qp-step" id="qps-3"></div></div>
+  </div>
+  <!-- Step 1 -->
+  <div class="qp-body" id="qp-step1">
+    <p style="font-size:13px;color:var(--t3);margin-bottom:18px">Recherchez un vin ou saisissez-en un nouveau.</p>
+    <div class="wine-search-wrap" id="ws-wrap">
+      <svg class="wine-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" class="wine-search-input" id="ws-input" placeholder="Gevrey-Chambertin, Meursault, Barolo…" oninput="searchWines(this.value)" autocomplete="off">
+      <div class="wine-suggestions" id="ws-suggestions"></div>
+    </div>
+    <div id="sel-wine-display" style="display:none"></div>
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--line)">
+      <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Ou saisissez manuellement</div>
+      <div class="frow"><div class="fg"><label>Nom du vin</label><input id="m-name" type="text" placeholder="ex : Château Petrus"></div><div class="fg"><label>Millésime</label><input id="m-year" type="number" placeholder="2019"></div><div class="fg"><label>Producteur</label><input id="m-prod" type="text" placeholder="ex : Pétrus"></div><div class="fg"><label>Appellation</label><input id="m-app" type="text" placeholder="ex : Pomerol"></div></div>
+      <div class="cpick" id="m-cpick"><div class="copt sel" data-c="rouge" onclick="pickMC(this)"><span class="cdot" style="background:#8B3A3A"></span>Rouge</div><div class="copt" data-c="blanc" onclick="pickMC(this)"><span class="cdot" style="background:#B8960C"></span>Blanc</div><div class="copt" data-c="rosé" onclick="pickMC(this)"><span class="cdot" style="background:#B06070"></span>Rosé</div><div class="copt" data-c="effervescent" onclick="pickMC(this)"><span class="cdot" style="background:#708020"></span>Effervescent</div></div>
+    </div>
+  </div>
+  <!-- Step 2 -->
+  <div class="qp-body" id="qp-step2" style="display:none">
+    <div id="qp-sel-recap"></div>
+    <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Votre note</div>
+    <div class="rating-big" id="qp-stars"><span class="rb-star" data-v="1" onclick="setQPScore(1)">★</span><span class="rb-star" data-v="2" onclick="setQPScore(2)">★</span><span class="rb-star" data-v="3" onclick="setQPScore(3)">★</span><span class="rb-star" data-v="4" onclick="setQPScore(4)">★</span><span class="rb-star" data-v="5" onclick="setQPScore(5)">★</span></div>
+    <div class="rating-label" id="qp-score-label">Cliquez pour noter</div>
+    <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Arômes &amp; caractère</div>
+    <div class="taste-tags" id="taste-tags"><div class="taste-tag" onclick="toggleTag(this)">Fruits rouges</div><div class="taste-tag" onclick="toggleTag(this)">Fruits noirs</div><div class="taste-tag" onclick="toggleTag(this)">Épices</div><div class="taste-tag" onclick="toggleTag(this)">Boisé</div><div class="taste-tag" onclick="toggleTag(this)">Floral</div><div class="taste-tag" onclick="toggleTag(this)">Minéral</div><div class="taste-tag" onclick="toggleTag(this)">Agrumes</div><div class="taste-tag" onclick="toggleTag(this)">Vanille</div><div class="taste-tag" onclick="toggleTag(this)">Toasté</div><div class="taste-tag" onclick="toggleTag(this)">Tannique</div><div class="taste-tag" onclick="toggleTag(this)">Frais</div><div class="taste-tag" onclick="toggleTag(this)">Rond</div><div class="taste-tag" onclick="toggleTag(this)">Fumé</div><div class="taste-tag" onclick="toggleTag(this)">Terreux</div></div>
+    <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Votre commentaire</div>
+    <textarea class="post-text" id="qp-text" placeholder="Décrivez ce vin en quelques mots… Ce qui vous a surpris, marqué, ému." maxlength="280" oninput="updateCharCount()"></textarea>
+    <div class="char-count"><span id="char-left">280</span> caractères restants</div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line)">
+      <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Accord recommandé <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">— optionnel</span></div>
+      <input type="text" id="qp-accord" placeholder="ex : agneau, fromage de chèvre, fruits de mer…" style="width:100%">
+    </div>
+  </div>
+  <!-- Step 3 -->
+  <div class="qp-body" id="qp-step3" style="display:none">
+    <div id="qp-preview"></div>
+    <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;margin-top:18px">Visibilité</div>
+    <div class="vis-toggle"><div class="vis-opt sel" onclick="selectVis(this,'public')"><div style="font-size:20px">🌍</div><div class="vis-opt-label">Public</div><div class="vis-opt-sub">Visible par tous</div></div><div class="vis-opt" onclick="selectVis(this,'abonnes')"><div style="font-size:20px">👥</div><div class="vis-opt-label">Abonnés</div><div class="vis-opt-sub">Vos abonnés</div></div><div class="vis-opt" onclick="selectVis(this,'cave')"><div style="font-size:20px">🔒</div><div class="vis-opt-label">Privé</div><div class="vis-opt-sub">Ma cave seule</div></div></div>
+    <div style="margin-top:18px;background:var(--bg3);border:1px solid var(--line2);border-radius:var(--r);padding:14px"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;color:var(--t2);font-weight:400"><input type="checkbox" id="qp-add-cave" checked style="width:auto;background:none;border:none;accent-color:var(--or)">Ajouter automatiquement à ma cave</label></div>
+  </div>
+  <div class="qp-footer">
+    <button class="qp-back" id="qp-back-btn" onclick="qpPrev()" style="display:none">← Retour</button>
+    <div class="qp-prog" id="qp-prog">Étape 1 / 3</div>
+    <button class="qp-next" id="qp-next-btn" onclick="qpNext()">Continuer →</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL AJOUTER BOUTEILLE ══ -->
+<div class="mo" id="modal-add">
+<div class="modal">
+  <div class="mh"><h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M8 7V5a2 2 0 00-4 0v2"/></svg>Ajouter une bouteille</h3><button class="mclose" onclick="closeModal('modal-add')">✕</button></div>
+  <div class="mb"><div class="frow"><div class="fg full"><label>Nom du vin *</label><input id="f-name" type="text" placeholder="ex : Château Margaux 2018"></div><div class="fg"><label>Producteur</label><input id="f-prod" type="text" placeholder="ex : Domaine Leflaive"></div><div class="fg"><label>Appellation</label><input id="f-app" type="text" placeholder="ex : Pomerol, Chablis…"></div><div class="fg"><label>Millésime</label><input id="f-year" type="number" placeholder="2020"></div><div class="fg"><label>Quantité</label><input id="f-qty" type="number" value="1" min="1"></div><div class="fg"><label>Prix achat (€)</label><input id="f-price" type="number" placeholder="25"></div><div class="fg"><label>Boire à partir de</label><input id="f-from" type="number" placeholder="2025"></div><div class="fg"><label>Boire avant</label><input id="f-until" type="number" placeholder="2035"></div><div class="fg full"><label>Couleur *</label><div class="cpick" id="cpick"><div class="copt sel" data-c="rouge" onclick="pickC(this)"><span class="cdot" style="background:#8B3A3A"></span>Rouge</div><div class="copt" data-c="blanc" onclick="pickC(this)"><span class="cdot" style="background:#B8960C"></span>Blanc</div><div class="copt" data-c="rosé" onclick="pickC(this)"><span class="cdot" style="background:#B06070"></span>Rosé</div><div class="copt" data-c="effervescent" onclick="pickC(this)"><span class="cdot" style="background:#708020"></span>Effervescent</div></div></div><div class="fg full"><label>Emplacement</label><input id="f-loc" type="text" placeholder="ex : Casier A, rangée 3"></div><div class="fg full"><label>Notes personnelles</label><textarea id="f-notes" placeholder="Vos observations, souvenirs d'achat…"></textarea></div></div></div>
+  <div class="mf"><button class="btn-s" onclick="closeModal('modal-add')">Annuler</button><button class="btn-p" onclick="addBottle()">Ajouter à la cave</button></div>
+</div>
+</div>
+
+<!-- DETAIL + MESSAGING + TOAST -->
+<div class="dp-ov" id="dp-ov"><div class="dp-bg" onclick="closeDetail()"></div><div class="dp" id="dp-inner"></div></div>
+<div class="conv-list" id="conv-list"><div class="conv-header"><div class="conv-title">Messages</div><button class="conv-close-btn" onclick="toggleConvList()">✕</button></div><div id="conv-items"></div></div>
+<div class="msg-panel" id="msg-panel"><div class="msg-header"><div class="msg-av" id="msg-av">T</div><div class="msg-hname" id="msg-name">Thomas V.</div><div class="msg-online"></div><button class="msg-hclose" onclick="closeMsgPanel()">✕</button></div><div class="msg-body" id="msg-body"></div><div class="msg-footer"><textarea class="msg-input" id="msg-input" placeholder="Votre message…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea><button class="msg-send" onclick="sendMsg()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   MILLÉSIME v9 — Multi-user ready
+   Architecture :
+   - currentUser : null si déconnecté, objet sinon
+   - userBottles / userFeed : données PER USER (simulées
+     en localStorage pour le prototype, en Supabase en prod)
+   ═══════════════════════════════════════════════════ */
+
+// ── CONSTANTS ──
+const WINE_IMGS={rouge:"https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&q=75",blanc:"https://images.unsplash.com/photo-1474722883778-792e7990302f?w=400&q=75",rosé:"https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=400&q=75",effervescent:"https://images.unsplash.com/photo-1505275350441-83dcda8eeef5?w=400&q=75"};
+const CBAR={rouge:'#7a1a1a',blanc:'#7a6010',rosé:'#7a3050',effervescent:'#4a6018'};
+const SCORE_LABELS=['','Passable','Correct','Bien','Très bien','Exceptionnel'];
+
+const WINE_DB=[
+  {id:'w001',name:"Gevrey-Chambertin 1er Cru",producer:"Rossignol-Trapet",appellation:"Gevrey-Chambertin",color:"rouge"},
+  {id:'w002',name:"Meursault Les Charmes",producer:"Domaine Leflaive",appellation:"Meursault",color:"blanc"},
+  {id:'w003',name:"Chambolle-Musigny",producer:"Domaine de Vogüé",appellation:"Bourgogne",color:"rouge"},
+  {id:'w004',name:"Pomerol",producer:"Pétrus",appellation:"Pomerol",color:"rouge"},
+  {id:'w005',name:"Chablis Grand Cru Les Clos",producer:"William Fèvre",appellation:"Chablis",color:"blanc"},
+  {id:'w006',name:"Champagne Blanc de Blancs",producer:"Jacquesson",appellation:"Champagne",color:"effervescent"},
+  {id:'w007',name:"Bandol Rosé",producer:"Domaine Tempier",appellation:"Bandol",color:"rosé"},
+  {id:'w008',name:"Côte-Rôtie La Landonne",producer:"E. Guigal",appellation:"Côte-Rôtie",color:"rouge"},
+  {id:'w009',name:"Pouilly-Fumé Silex",producer:"Didier Dagueneau",appellation:"Pouilly-Fumé",color:"blanc"},
+  {id:'w010',name:"Barolo DOCG",producer:"Giacomo Conterno",appellation:"Piémont",color:"rouge"},
+  {id:'w011',name:"Sauternes",producer:"Château d'Yquem",appellation:"Sauternes",color:"blanc"},
+  {id:'w012',name:"Rioja Gran Reserva",producer:"Marqués de Riscal",appellation:"Rioja",color:"rouge"},
+];
+
+const TRENDING=[
+  {id:'w001',name:"Gevrey-Chambertin 1er Cru",producer:"Rossignol-Trapet",vintage:2019,color:"rouge",score:4.5,rank:1,taste:"Tanins soyeux, cerise noire et sous-bois. Un Bourgogne d'exception."},
+  {id:'w002',name:"Meursault Les Charmes",producer:"Domaine Leflaive",vintage:2020,color:"blanc",score:4.8,rank:2,taste:"Pierre à fusil, beurre frais. Blanc de garde sublime."},
+  {id:'w006',name:"Champagne Blanc de Blancs",producer:"Jacquesson",vintage:2017,color:"effervescent",score:4.6,rank:3,taste:"Bulles fines, citron confit, minéralité crayeuse."},
+  {id:'w007',name:"Bandol Rosé",producer:"Domaine Tempier",vintage:2022,color:"rosé",score:4.2,rank:4,taste:"Fraise des bois et pêche blanche. Frais, salin."},
+  {id:'w005',name:"Chablis Grand Cru",producer:"William Fèvre",vintage:2021,color:"blanc",score:4.5,rank:5,taste:"Iode, silex, agrumes. La quintessence du Chablis."},
+];
+
+const NEWS_DATA=[
+  {id:1,cat:"accord",title:"Bourgogne blanc & Saint-Jacques : le mariage parfait de l'automne",excerpt:"La douceur de la noix de Saint-Jacques se marie à la perfection avec la minéralité d'un Meursault ou d'un Puligny-Montrachet. Guide complet des accords.",author:"L. Moreau",time:"8 min",img:"https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&q=75",date:"20 mars 2026",featured:true},
+  {id:2,cat:"region",title:"Le Jura, terra incognita des grands amateurs",excerpt:"Entre Chardonnay oxydatif et Savagnin, le Jura s'impose comme la région confidentielle à connaître.",author:"M. Bernard",time:"5 min",img:"https://images.unsplash.com/photo-1474722883778-792e7990302f?w=400&q=75",date:"18 mars 2026"},
+  {id:3,cat:"sortie",title:"2022 en Provence : un rosé d'exception à mettre en cave",excerpt:"Contre toute attente, le millésime 2022 a produit des rosés de Provence capables de vieillir 5 à 8 ans.",author:"S. Dupont",time:"4 min",img:"https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=400&q=75",date:"15 mars 2026"},
+  {id:4,cat:"article",title:"Barolo 2019 : pourquoi ce millésime va entrer dans la légende",excerpt:"Les producteurs du Piémont s'accordent : 2019 est un millésime historique pour le Barolo. Analyse des meilleurs domaines.",author:"R. Costa",time:"10 min",img:"https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&q=75",date:"12 mars 2026"},
+  {id:5,cat:"sortie",title:"Les nouveaux naturels à ne pas manquer ce printemps",excerpt:"De la Loire à la Sicile, une sélection de vins naturels qui redéfinissent l'excellence sans compromis sur la qualité.",author:"A. Klein",time:"6 min",img:"https://images.unsplash.com/photo-1474722883778-792e7990302f?w=400&q=75",date:"10 mars 2026"},
+];
+
+const PUBLIC_FEED=[
+  {user:"Thomas V.",ini:"T",bg:"#1a3a50",wine:"Chambolle-Musigny",app:"Bourgogne · 2018",color:"rouge",text:"Nez enchanteur de rose et de framboise. Bouche aérienne, soie pure. Un vin qui chante.",score:5,tags:["bourgogne","pinot noir"],likes:12,liked:false,time:"il y a 2h"},
+  {user:"Sophie L.",ini:"S",bg:"#1a3028",wine:"Pouilly-Fumé Silex",app:"Loire · 2021",color:"blanc",text:"Silex purs au nez, bouche ciselée avec une tension admirable.",score:4,tags:["loire","sauvignon"],likes:8,liked:false,time:"il y a 5h"},
+  {user:"Arnaud B.",ini:"A",bg:"#202838",wine:"Côte-Rôtie La Landonne",app:"Rhône · 2016",color:"rouge",text:"Monstre de concentration. Bacon fumé, olive noire, violette.",score:4.5,tags:["rhône","syrah"],likes:21,liked:true,time:"hier"},
+  {user:"Claire M.",ini:"C",bg:"#501828",wine:"Sauternes",app:"Bordeaux · 2019",color:"blanc",text:"Liquoreux sublime. Miel, abricot confit, safran.",score:5,tags:["bordeaux","liquoreux"],likes:16,liked:false,time:"il y a 2j"},
+];
+
+const CONVS=[
+  {ini:"T",bg:"#1a3a50",name:"Thomas V.",preview:"Super ce Gevrey, tu as raison !",unread:2,msgs:[{me:false,text:"Salut ! J'ai vu ta dégustation du Gevrey-Chambertin 👌",time:"14:32"},{me:true,text:"Merci ! C'est vraiment un millésime exceptionnel",time:"14:35"},{me:false,text:"Super ce Gevrey, tu as raison !",time:"14:38"}]},
+  {ini:"S",bg:"#1a3028",name:"Sophie L.",preview:"Tu connais ce producteur ?",unread:0,msgs:[{me:false,text:"Tu connais ce producteur ? Domaine de la Romanée-Conti",time:"hier"},{me:true,text:"Oui ! Un des plus grands domaines de Bourgogne 🍷",time:"hier"}]},
+];
+
+const SUGGS=[
+  {ini:"J",bg:"#1a3018",name:"Jean-Luc P.",sub:"Spécialiste Rhône · 84 dégustations",following:false},
+  {ini:"E",bg:"#201830",name:"Emma R.",sub:"Sommelière professionnelle",following:false},
+  {ini:"P",bg:"#282010",name:"Pierre D.",sub:"Passionné Bourgogne",following:true},
+];
+
+const ACCORD_DB={
+  'viande rouge':[{color:'rouge',why:'Tanins et puissance pour contrebalancer la richesse de la viande'}],
+  'viande':[{color:'rouge',why:'Classique et indémodable'}],
+  'agneau':[{color:'rouge',why:'Le Sud-Ouest et l\'agneau, une évidence'}],
+  'boeuf':[{color:'rouge',why:'Corps et tanins pour accompagner le bœuf'}],
+  'poisson':[{color:'blanc',why:'Fraîcheur et minéralité pour sublimer le poisson'},{color:'effervescent',why:'Les bulles nettoient le palais'}],
+  'saumon':[{color:'blanc',why:'Gras du saumon et tension du blanc, accord parfait'},{color:'rosé',why:'Rosé de Provence, accord estival'}],
+  'fruits de mer':[{color:'blanc',why:'Minéralité et iode en écho'},{color:'effervescent',why:'Champagne et fruits de mer, classique ultime'}],
+  'fromage':[{color:'rouge',why:'Rouge léger sur fromage doux'},{color:'blanc',why:'Blanc liquoreux sur fromage affiné'}],
+  'volaille':[{color:'blanc',why:'Blanc de Bourgogne, accord de terroir'},{color:'rouge',why:'Rouge léger et fruité'}],
+  'poulet':[{color:'blanc',why:'Chardonnay pour la douceur du poulet'}],
+  'canard':[{color:'rouge',why:'Fruité et épicé pour accompagner le canard'}],
+  'magret':[{color:'rouge',why:'La puissance du magret appelle un rouge charpenté'}],
+  'pâtes':[{color:'rouge',why:'Rouge léger type Chianti'},{color:'blanc',why:'Blanc fruité avec les pâtes à la crème'}],
+  'truffes':[{color:'rouge',why:'La truffe appelle un rouge de caractère'},{color:'blanc',why:'Blanc oxydatif avec la truffe blanche'}],
+  'dessert':[{color:'effervescent',why:'Doux et festif'},{color:'blanc',why:'Blanc liquoreux'}],
+  'chocolat':[{color:'rouge',why:'Rouge puissant et boisé avec le chocolat noir'}],
+  'apéritif':[{color:'effervescent',why:'Champagne ou crémant, l\'apéritif par excellence'},{color:'rosé',why:'Rosé léger et festif'}],
+};
+
+const ACCORD_SUGGEST={
+  rouge:[{name:"Gevrey-Chambertin",producer:"Rossignol-Trapet",vintage:2019},{name:"Côte-Rôtie",producer:"E. Guigal",vintage:2018}],
+  blanc:[{name:"Meursault Les Charmes",producer:"Domaine Leflaive",vintage:2020},{name:"Chablis Grand Cru",producer:"William Fèvre",vintage:2021}],
+  rosé:[{name:"Bandol Rosé",producer:"Domaine Tempier",vintage:2022}],
+  effervescent:[{name:"Champagne Blanc de Blancs",producer:"Jacquesson",vintage:2017}],
+};
+
+/* ═══════════════════════════
+   USER STATE — clé de voûte
+   En production : remplacer par Supabase Auth
+   ═══════════════════════════ */
+let currentUser = null; // null = déconnecté
+
+// Données PER USER — en prod ce serait dans Supabase par user_id
+function getUserData(key, defaultVal) {
+  if(!currentUser) return defaultVal;
+  const stored = localStorage.getItem(`millesime_${currentUser.id}_${key}`);
+  return stored ? JSON.parse(stored) : defaultVal;
+}
+function setUserData(key, val) {
+  if(!currentUser) return;
+  localStorage.setItem(`millesime_${currentUser.id}_${key}`, JSON.stringify(val));
+}
+
+// Getters/setters raccourcis
+function getBottles() { return getUserData('bottles', []); }
+function saveBottles(b) { setUserData('bottles', b); }
+function getUserFeed() { return getUserData('feed', []); }
+function saveUserFeed(f) { setUserData('feed', f); }
+
+/* ═══════════════════════════
+   INIT & NAV
+   ═══════════════════════════ */
+let selColor='rouge',curFilter='all',qpStep=1,qpScore=0,qpSelWine=null,qpVis='public',qpMColor='rouge',curConv=0;
+
+function init(){
+  renderHeroCards();
+  renderTrending();
+  renderFeedStrip();
+  renderNewsPreview();
+  renderDisco();
+  renderSuggestions();
+  renderConvList();
+  updateAuthUI();
+}
+
+function updateAuthUI(){
+  const li = currentUser;
+  document.getElementById('nav-out').style.display = li ? 'none' : 'flex';
+  document.getElementById('nav-in').style.display = li ? 'flex' : 'none';
+  document.getElementById('main-nav').style.display = li ? 'flex' : 'none';
+
+  if(li){
+    // Update hero CTAs for logged-in users
+    const ctas = document.getElementById('hero-ctas');
+    ctas.innerHTML = `<button class="btn-hp" onclick="showPage('cave',null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M8 7V5a2 2 0 00-4 0v2"/></svg>Voir ma cave</button><button class="btn-hs" onclick="openQuickPost()">Partager une dégustation</button>`;
+    const initials = (li.prenom[0]||(li.email[0]||'?')).toUpperCase();
+    document.getElementById('nav-avatar').textContent = initials;
+    document.getElementById('prof-av-letter').textContent = initials;
+    document.getElementById('prof-name-display').textContent = `${li.prenom} ${li.nom}`;
+    document.getElementById('profile-logged-in').style.display = 'block';
+    document.getElementById('profile-logged-out').style.display = 'none';
+    // Cave: show content, hide lock
+    document.getElementById('cave-locked').style.display = 'none';
+    document.getElementById('wine-grid').style.display = '';
+    renderCave();
+  } else {
+    document.getElementById('profile-logged-in').style.display = 'none';
+    document.getElementById('profile-logged-out').style.display = 'block';
+    document.getElementById('cave-locked').style.display = 'block';
+    document.getElementById('wine-grid').style.display = 'none';
+  }
+  updateStats();
+  renderFullFeed();
+}
+
+function requireLogin(fn){
+  if(currentUser){ fn(); return; }
+  openAuth('login');
+  toast('Connectez-vous pour accéder à cette fonctionnalité.');
+}
+
+function goHome(){showPage('home',null)}
+
+function showPage(p,btn){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  const el=document.getElementById('page-'+p);
+  if(el){ el.classList.remove('active'); void el.offsetWidth; el.classList.add('active'); }
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  else document.querySelectorAll('.nb').forEach(b=>{ if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+p+"'")) b.classList.add('active'); });
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(p==='news') renderNewsFullGrid('all');
+  if(p==='profile'){ renderFullFeed(); updateStats(); }
+}
+
+/* ═══════════════════════════
+   AUTH
+   ═══════════════════════════ */
+function openAuth(mode){ document.getElementById('modal-auth').classList.add('open'); switchAuth(mode); }
+function switchAuth(mode){
+  document.getElementById('auth-login').style.display = mode==='login'?'block':'none';
+  document.getElementById('auth-signup').style.display = mode==='signup'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('active', mode==='login');
+  document.getElementById('tab-signup').classList.toggle('active', mode==='signup');
+}
+function doLogin(){
+  const email = document.getElementById('a-email').value.trim();
+  const pass = document.getElementById('a-pass').value;
+  if(!email||!pass){ toast('Veuillez remplir tous les champs.'); return; }
+  // Prototype: create/retrieve user by email from localStorage
+  const userKey = 'millesime_user_' + btoa(email);
+  let user = localStorage.getItem(userKey);
+  if(user){ user = JSON.parse(user); }
+  else {
+    // Auto-create on first login (prototype only — en prod Supabase vérifie le mot de passe)
+    user = { id: btoa(email), email, prenom: email.split('@')[0], nom: '', avatar: email[0].toUpperCase() };
+    localStorage.setItem(userKey, JSON.stringify(user));
+  }
+  currentUser = user;
+  closeModal('modal-auth');
+  updateAuthUI();
+  showPage('cave', null);
+  toast(`Bienvenue, ${user.prenom} ! 🍷`);
+}
+function doSignup(){
+  const first = document.getElementById('s-first').value.trim();
+  const last = document.getElementById('s-last').value.trim();
+  const email = document.getElementById('s-email').value.trim();
+  const pass = document.getElementById('s-pass').value;
+  if(!first||!email||!pass){ toast('Veuillez remplir tous les champs.'); return; }
+  const user = { id: btoa(email), email, prenom: first, nom: last, avatar: first[0].toUpperCase() };
+  localStorage.setItem('millesime_user_' + btoa(email), JSON.stringify(user));
+  currentUser = user;
+  closeModal('modal-auth');
+  updateAuthUI();
+  showPage('cave', null);
+  toast(`Bienvenue sur Millésime, ${first} ! 🍷`);
+}
+function doOAuth(provider){
+  // Simule un OAuth — en prod : Supabase signInWithOAuth
+  const fake = { id: 'oauth_'+provider+'_'+Date.now(), email: provider.toLowerCase()+'@oauth.com', prenom: provider+' User', nom: '', avatar: provider[0] };
+  currentUser = fake;
+  closeModal('modal-auth');
+  updateAuthUI();
+  showPage('cave', null);
+  toast(`Connecté via ${provider} ! 🍷`);
+}
+function doLogout(){
+  currentUser = null;
+  updateAuthUI();
+  showPage('home', null);
+  toast('Déconnecté avec succès.');
+}
+
+/* ═══════════════════════════
+   STATS
+   ═══════════════════════════ */
+function updateStats(){
+  const bottles = getBottles();
+  const tot = bottles.reduce((s,b)=>s+b.qty,0);
+  const val = bottles.reduce((s,b)=>s+(b.price||0)*b.qty,0);
+  const allT = bottles.flatMap(b=>b.tastings||[]);
+  const avg = allT.length ? (allT.reduce((s,t)=>s+t.score,0)/allT.length).toFixed(1) : '—';
+  const vs = val>999 ? (val/1000).toFixed(1)+'k€' : val+'€';
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  set('st-t',tot);set('st-r',bottles.length);set('st-n',avg);set('st-v',vs);
+  set('st2-t',tot);set('st2-r',bottles.length);set('st2-n',avg);set('st2-v',vs);
+  set('ps-b',tot);set('ps-deg',allT.length);
+  const cs=document.getElementById('cave-sub');
+  if(cs) cs.textContent = currentUser ? `${bottles.length} référence${bottles.length>1?'s':''} · ${tot} bouteille${tot>1?'s':''} au total` : 'Connectez-vous pour voir votre cave';
+}
+
+/* ═══════════════════════════
+   CAVE TABS
+   ═══════════════════════════ */
+function switchCaveTab(tab, btn){
+  document.querySelectorAll('.cave-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['cave','accord','stats'].forEach(t=>{
+    const p=document.getElementById('cave-panel-'+t);
+    if(p) p.style.display = t===tab ? 'block' : 'none';
+  });
+  if(tab==='stats') renderStats();
+}
+
+/* ═══════════════════════════
+   CAVE — BOUTEILLES
+   ═══════════════════════════ */
+function renderCave(f='all'){
+  const bottles = getBottles();
+  const list = f==='all' ? bottles : bottles.filter(b=>b.color===f);
+  const grid = document.getElementById('wine-grid');
+  if(!grid) return;
+  if(!list.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-title">Votre cave est vide</div><div class="empty-sub">Commencez par ajouter votre première bouteille.</div><button class="btn-p" onclick="openAddModal()">Ajouter une bouteille</button></div>`;
+    return;
+  }
+  grid.innerHTML=list.map(b=>{
+    const sc=b.tastings&&b.tastings.length?(b.tastings.reduce((s,t)=>s+t.score,0)/b.tastings.length).toFixed(1):null;
+    return `<div class="wcard" onclick="openDetail('${b.id}')"><div class="wcard-img"><img src="${WINE_IMGS[b.color]}" alt="${b.name}" loading="lazy"><div class="wcard-ov"></div><span class="wcard-yr">${b.vintage}</span></div><div class="wcard-body"><div class="wcard-name">${b.name}</div><div class="wcard-prod">${b.producer}${b.appellation?' · '+b.appellation:''}</div><div class="wcard-foot">${sc?`<div class="wcard-score">★ ${sc}</div>`:`<div style="font-size:10px;color:var(--t3)">Non dégusté</div>`}<div class="wcard-qty">${b.qty} btl</div></div></div></div>`;
+  }).join('');
+}
+
+function filterW(f,btn){
+  curFilter=f;
+  document.querySelectorAll('.filters .chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderCave(f);
+}
+
+function openAddModal(){ if(!currentUser){openAuth('login');return;} document.getElementById('modal-add').classList.add('open'); }
+function pickC(el){document.querySelectorAll('#cpick .copt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');selColor=el.dataset.c}
+
+function addBottle(){
+  if(!currentUser){toast('Connectez-vous pour ajouter une bouteille.');return;}
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){toast('Veuillez saisir le nom du vin.');return;}
+  const b={id:'b_'+Date.now(),name,producer:document.getElementById('f-prod').value.trim()||'Producteur inconnu',appellation:document.getElementById('f-app').value.trim()||'',vintage:parseInt(document.getElementById('f-year').value)||new Date().getFullYear(),qty:parseInt(document.getElementById('f-qty').value)||1,price:parseFloat(document.getElementById('f-price').value)||0,color:selColor,from:parseInt(document.getElementById('f-from').value)||null,until:parseInt(document.getElementById('f-until').value)||null,location:document.getElementById('f-loc').value.trim()||'',notes:document.getElementById('f-notes').value.trim()||'',tastings:[]};
+  const bottles = getBottles(); bottles.push(b); saveBottles(bottles);
+  closeModal('modal-add'); renderCave(curFilter); updateStats();
+  toast(`${b.name} ajouté à votre cave.`);
+  ['f-name','f-prod','f-app','f-year','f-price','f-from','f-until','f-loc','f-notes'].forEach(i=>{const e=document.getElementById(i);if(e)e.value=''});
+  document.getElementById('f-qty').value='1';
+}
+
+function openDetail(id){
+  const bottles = getBottles();
+  const b = bottles.find(x=>x.id===id);
+  if(!b) return;
+  const tasHtml=b.tastings&&b.tastings.length?b.tastings.map(t=>`<div class="tcard"><div class="tcard-h"><div class="tscore">${'★'.repeat(Math.floor(t.score))}${t.score%1?'½':''} <strong>${t.score}/5</strong></div><div class="tdate">${t.date}</div></div>${t.nose?`<div class="tline"><strong>Nez :</strong> ${t.nose}</div>`:''}${t.palate?`<div class="tline"><strong>Bouche :</strong> ${t.palate}</div>`:''}${t.finish?`<div class="tline"><strong>Finale :</strong> ${t.finish}</div>`:''}</div>`).join(''):`<div style="color:var(--t3);font-size:13px;padding:8px 0">Aucune dégustation enregistrée.</div>`;
+  document.getElementById('dp-inner').innerHTML=`<div class="dph"><img src="${WINE_IMGS[b.color]}" alt="${b.name}"><div class="dph-ov"></div><button class="dp-close" onclick="closeDetail()">✕</button><div class="dph-content"><div class="dp-name">${b.name}</div><div class="dp-app">${b.producer}${b.appellation?' · '+b.appellation:''}</div></div></div><div class="dpb"><div class="dpg"><div class="di"><div class="di-l">Millésime</div><div class="di-v">${b.vintage}</div></div><div class="di"><div class="di-l">Quantité</div><div class="di-v">${b.qty} btl</div></div><div class="di"><div class="di-l">Prix achat</div><div class="di-v">${b.price?b.price+'€':'—'}</div></div><div class="di"><div class="di-l">Emplacement</div><div class="di-v">${b.location||'—'}</div></div><div class="di"><div class="di-l">Boire dès</div><div class="di-v">${b.from||'—'}</div></div><div class="di"><div class="di-l">Boire avant</div><div class="di-v">${b.until||'—'}</div></div></div>${b.notes?`<div class="dsect">Notes personnelles</div><div style="background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:11px;font-size:13px;color:var(--t2);line-height:1.6">${b.notes}</div>`:''}<div class="dsect">Dégustations (${(b.tastings||[]).length})</div>${tasHtml}<div class="dpactions"><button class="btn-p" style="flex:1;justify-content:center" onclick="closeDetail();prefillQP('${b.id}')">Ajouter une dégustation</button><button class="btn-del" onclick="deleteBottle('${b.id}')">Supprimer</button></div></div>`;
+  document.getElementById('dp-ov').classList.add('open');
+}
+function closeDetail(){document.getElementById('dp-ov').classList.remove('open')}
+function deleteBottle(id){
+  let bottles=getBottles(); bottles=bottles.filter(b=>b.id!==id); saveBottles(bottles);
+  closeDetail(); renderCave(curFilter); updateStats(); toast('Bouteille supprimée.');
+}
+function prefillQP(id){const bottles=getBottles();const b=bottles.find(x=>x.id===id);openQuickPost();if(b){qpSelWine={name:b.name,producer:b.producer,appellation:b.appellation,color:b.color,vintage:b.vintage,img:WINE_IMGS[b.color]};renderQPStep1()}}
+
+/* ═══════════════════════════
+   ACCORD METS & VIN
+   ═══════════════════════════ */
+function setPlat(btn,plat){
+  document.querySelectorAll('.plat-btn').forEach(b=>b.classList.remove('active-plat'));
+  btn.classList.add('active-plat');
+  document.getElementById('accord-input').value=plat;
+  filterAccord();
+}
+function filterAccord(){
+  const q=document.getElementById('accord-input').value.toLowerCase().trim();
+  if(!q){document.getElementById('accord-results').style.display='none';return;}
+  let matches=[];
+  for(const[key,rules] of Object.entries(ACCORD_DB)){
+    if(q.includes(key)||key.split(' ').some(k=>q.includes(k))) matches=[...matches,...rules];
+  }
+  if(!matches.length) matches=[{color:'rouge',why:'Accord classique'},{color:'blanc',why:'Alternative élégante'}];
+  const seen=new Set();
+  const uniq=matches.filter(m=>{if(seen.has(m.color))return false;seen.add(m.color);return true;});
+  const bottles=getBottles();
+  const caveM=bottles.filter(b=>uniq.some(u=>u.color===b.color));
+  const caveSect=document.getElementById('accord-cave-section');
+  const caveGrid=document.getElementById('accord-cave-grid');
+  if(caveM.length){caveSect.style.display='block';caveGrid.innerHTML=caveM.map(b=>{const why=uniq.find(u=>u.color===b.color)?.why||'';return `<div class="accord-card"><div class="accord-match">Cave</div><div class="wcard-img" style="height:110px;position:relative;overflow:hidden"><img src="${WINE_IMGS[b.color]}" alt="${b.name}" loading="lazy" style="width:100%;height:100%;object-fit:cover"><div class="wcard-ov"></div><span class="wcard-yr">${b.vintage}</span></div><div style="padding:10px 12px 4px"><div class="wcard-name">${b.name}</div><div class="wcard-prod">${b.producer}</div></div><div class="accord-why">"${why}"</div></div>`;}).join('');}
+  else caveSect.style.display='none';
+  const suggGrid=document.getElementById('accord-sugg-grid');
+  const suggItems=uniq.flatMap(u=>(ACCORD_SUGGEST[u.color]||[]).slice(0,2).map(s=>({...s,color:u.color,why:u.why})));
+  suggGrid.innerHTML=suggItems.map(s=>`<div class="accord-card"><div class="wcard-img" style="height:110px;position:relative;overflow:hidden"><img src="${WINE_IMGS[s.color]}" alt="${s.name}" loading="lazy" style="width:100%;height:100%;object-fit:cover"><div class="wcard-ov"></div></div><div style="padding:10px 12px 4px"><div class="wcard-name">${s.name}</div><div class="wcard-prod">${s.producer} · ${s.vintage}</div></div><div class="accord-why">"${s.why}"</div><div style="padding:0 12px 12px"><button class="btn-p" style="width:100%;justify-content:center;padding:6px;font-size:10px" onclick="addDisco(event,'${s.name}','${s.color}',${s.vintage},'${s.producer}','')">+ Cave</button></div></div>`).join('');
+  document.getElementById('accord-label').textContent=`Accords pour "${document.getElementById('accord-input').value}"`;
+  document.getElementById('accord-results').style.display='block';
+}
+
+/* ═══════════════════════════
+   STATS CAVE
+   ═══════════════════════════ */
+function renderStats(){
+  const bottles=getBottles();
+  const colors={rouge:'Rouge',blanc:'Blanc',rosé:'Rosé',effervescent:'Effervescent'};
+  const cc=Object.entries(colors).map(([c,l])=>({label:l,count:bottles.filter(b=>b.color===c).reduce((s,b)=>s+b.qty,0)})).filter(x=>x.count>0).sort((a,b)=>b.count-a.count);
+  const maxC=Math.max(...cc.map(x=>x.count),1);
+  document.getElementById('stats-colors').innerHTML=cc.map(x=>`<div class="stat-bar-row"><div class="stat-bar-label">${x.label}</div><div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.round(x.count/maxC*100)}%"></div></div><div class="stat-bar-val">${x.count}</div></div>`).join('');
+  const rm={};bottles.forEach(b=>{const r=b.appellation||'Autre';rm[r]=(rm[r]||0)+b.qty;});
+  const regions=Object.entries(rm).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxR=Math.max(...regions.map(x=>x[1]),1);
+  document.getElementById('stats-regions').innerHTML=regions.map(([r,n])=>`<div class="stat-bar-row"><div class="stat-bar-label" style="font-size:11px">${r}</div><div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.round(n/maxR*100)}%"></div></div><div class="stat-bar-val">${n}</div></div>`).join('');
+  const vm={};bottles.forEach(b=>{vm[b.vintage]=(vm[b.vintage]||0)+b.qty;});
+  const vs=Object.entries(vm).sort((a,b)=>a[0]-b[0]);
+  const maxV=Math.max(...vs.map(x=>x[1]),1);
+  document.getElementById('stats-vintages').innerHTML=vs.map(([y,n])=>`<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1"><div style="font-size:9px;color:var(--t3)">${n}</div><div style="width:100%;max-width:36px;background:var(--or);border-radius:3px 3px 0 0;height:${Math.round(n/maxV*60)+8}px"></div><div style="font-size:9px;color:var(--t3)">${y}</div></div>`).join('');
+}
+
+/* ═══════════════════════════
+   QUICK POST
+   ═══════════════════════════ */
+function openQuickPost(){
+  if(!currentUser){openAuth('login');return;}
+  qpStep=1;qpScore=0;qpSelWine=null;qpVis='public';qpMColor='rouge';
+  renderQPStep1();
+  document.getElementById('modal-qp').classList.add('open');
+}
+function renderQPStep1(){
+  ['qp-step1','qp-step2','qp-step3'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
+  document.getElementById('qp-title').textContent='Choisir un vin';
+  document.getElementById('qp-prog').textContent='Étape 1 / 3';
+  document.getElementById('qp-back-btn').style.display='none';
+  document.getElementById('qp-next-btn').textContent='Continuer →';
+  document.getElementById('ws-input').value='';
+  document.getElementById('ws-suggestions').classList.remove('open');
+  const sd=document.getElementById('sel-wine-display');sd.style.display=qpSelWine?'block':'none';
+  if(qpSelWine){document.getElementById('ws-wrap').style.display='none';sd.innerHTML=`<div class="sel-wine"><div class="sel-wine-img"><img src="${qpSelWine.img}" alt="${qpSelWine.name}"></div><div style="flex:1"><div class="sel-wine-name">${qpSelWine.name}</div><div class="sel-wine-meta">${qpSelWine.producer||''}${qpSelWine.vintage?' · '+qpSelWine.vintage:''}</div></div><button class="sel-change" onclick="clearSelWine()">Changer</button></div>`;}
+  else document.getElementById('ws-wrap').style.display='block';
+  updateQPSteps();
+}
+function clearSelWine(){qpSelWine=null;document.getElementById('sel-wine-display').style.display='none';document.getElementById('ws-wrap').style.display='block'}
+function searchWines(q){
+  const sug=document.getElementById('ws-suggestions');
+  if(q.length<2){sug.classList.remove('open');return;}
+  const res=WINE_DB.filter(w=>w.name.toLowerCase().includes(q.toLowerCase())||w.producer.toLowerCase().includes(q.toLowerCase())).slice(0,5);
+  if(!res.length){sug.classList.remove('open');return;}
+  sug.innerHTML=res.map(w=>`<div class="ws-item" onclick="selectWineDB('${w.id}')"><div class="ws-thumb"><img src="${WINE_IMGS[w.color]}" alt="${w.name}" loading="lazy"></div><div><div class="ws-name">${w.name}</div><div class="ws-meta">${w.producer} · ${w.appellation}</div></div><span class="ws-type ${w.color}">${w.color.charAt(0).toUpperCase()+w.color.slice(1)}</span></div>`).join('');
+  sug.classList.add('open');
+}
+function selectWineDB(id){
+  const w=WINE_DB.find(x=>x.id===id);if(!w)return;
+  qpSelWine={...w,vintage:2020,img:WINE_IMGS[w.color]};
+  document.getElementById('ws-suggestions').classList.remove('open');
+  document.getElementById('ws-wrap').style.display='none';
+  const sd=document.getElementById('sel-wine-display');
+  sd.innerHTML=`<div class="sel-wine"><div class="sel-wine-img"><img src="${WINE_IMGS[w.color]}" alt="${w.name}"></div><div style="flex:1"><div class="sel-wine-name">${w.name}</div><div class="sel-wine-meta">${w.producer} · ${w.appellation}</div></div><button class="sel-change" onclick="clearSelWine()">Changer</button></div>`;
+  sd.style.display='block';
+}
+function pickMC(el){document.querySelectorAll('#m-cpick .copt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');qpMColor=el.dataset.c}
+function setQPScore(v){qpScore=v;document.querySelectorAll('#qp-stars .rb-star').forEach(s=>s.classList.toggle('lit',parseInt(s.dataset.v)<=v));document.getElementById('qp-score-label').textContent=SCORE_LABELS[v]||''}
+function toggleTag(el){el.classList.toggle('active')}
+function updateCharCount(){document.getElementById('char-left').textContent=280-document.getElementById('qp-text').value.length}
+function selectVis(el,v){document.querySelectorAll('.vis-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');qpVis=v}
+function updateQPSteps(){[1,2,3].forEach(i=>{const s=document.getElementById('qps-'+i);s.className='qp-step'+(i<qpStep?' done':i===qpStep?' active':'')})}
+
+function qpNext(){
+  if(qpStep===1){
+    const mn=document.getElementById('m-name').value.trim();
+    if(!qpSelWine&&!mn){toast('Choisissez ou saisissez un vin.');return;}
+    if(!qpSelWine&&mn) qpSelWine={name:mn,producer:document.getElementById('m-prod').value.trim()||'',appellation:document.getElementById('m-app').value.trim()||'',color:qpMColor,vintage:parseInt(document.getElementById('m-year').value)||2022,img:WINE_IMGS[qpMColor]};
+    qpStep=2;
+    ['qp-step1','qp-step2'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'none':'block');
+    document.getElementById('qp-title').textContent='Votre dégustation';
+    document.getElementById('qp-prog').textContent='Étape 2 / 3';
+    document.getElementById('qp-back-btn').style.display='block';
+    document.getElementById('qp-sel-recap').innerHTML=`<div class="sel-wine" style="margin-bottom:18px"><div class="sel-wine-img"><img src="${qpSelWine.img}" alt="${qpSelWine.name}"></div><div><div class="sel-wine-name">${qpSelWine.name}</div><div class="sel-wine-meta">${qpSelWine.producer||''}${qpSelWine.vintage?' · '+qpSelWine.vintage:''}</div></div></div>`;
+    updateQPSteps();return;
+  }
+  if(qpStep===2){
+    if(!qpScore){toast('Donnez une note au vin.');return;}
+    qpStep=3;
+    ['qp-step2','qp-step3'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'none':'block');
+    document.getElementById('qp-title').textContent='Publier';
+    document.getElementById('qp-prog').textContent='Étape 3 / 3';
+    document.getElementById('qp-next-btn').textContent='Publier ✓';
+    const tags=[...document.querySelectorAll('.taste-tag.active')].map(t=>t.textContent).join(', ');
+    const txt=document.getElementById('qp-text').value;
+    const stars=Array.from({length:5},(_,k)=>`<span style="color:${k<qpScore?'var(--or)':'var(--line)'}">★</span>`).join('');
+    document.getElementById('qp-preview').innerHTML=`<div style="background:var(--bg3);border:1px solid var(--line2);border-radius:var(--rl);padding:16px"><div style="display:flex;gap:12px;margin-bottom:10px"><div style="width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--line)"><img src="${qpSelWine.img}" style="width:100%;height:100%;object-fit:cover"></div><div><div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--t1)">${qpSelWine.name}</div><div style="font-size:11px;color:var(--t3)">${qpSelWine.producer||''}${qpSelWine.vintage?' · '+qpSelWine.vintage:''}</div></div></div><div style="display:flex;gap:2px;margin-bottom:7px">${stars}</div>${tags?`<div style="font-size:12px;color:var(--or);margin-bottom:6px;font-weight:700">${tags}</div>`:''}${txt?`<div style="font-size:13px;color:var(--t2);font-style:italic;line-height:1.6">"${txt}"</div>`:''}</div>`;
+    updateQPSteps();return;
+  }
+  if(qpStep===3) publishPost();
+}
+function qpPrev(){
+  if(qpStep===2){qpStep=1;renderQPStep1();return;}
+  if(qpStep===3){qpStep=2;document.getElementById('qp-step3').style.display='none';document.getElementById('qp-step2').style.display='block';document.getElementById('qp-title').textContent='Votre dégustation';document.getElementById('qp-prog').textContent='Étape 2 / 3';document.getElementById('qp-next-btn').textContent='Continuer →';updateQPSteps();}
+}
+function publishPost(){
+  if(!currentUser)return;
+  const tags=[...document.querySelectorAll('.taste-tag.active')].map(t=>t.textContent);
+  const txt=document.getElementById('qp-text').value.trim();
+  const accord=document.getElementById('qp-accord').value.trim();
+  const newPost={id:'p_'+Date.now(),user:currentUser.prenom+' '+(currentUser.nom||''),ini:(currentUser.prenom[0]||(currentUser.email[0]||'?')).toUpperCase(),bg:'#1a3a50',wine:qpSelWine.name,app:`${qpSelWine.appellation||'Cave'}${qpSelWine.vintage?' · '+qpSelWine.vintage:''}`,color:qpSelWine.color,text:txt||tags.join(', ')||'Excellent vin.',score:qpScore,tags:[qpSelWine.color,...tags.slice(0,2)],likes:0,liked:false,time:'à l\'instant',img:qpSelWine.img,accord};
+  // Save to user's personal feed
+  const myFeed=getUserFeed(); myFeed.unshift(newPost); saveUserFeed(myFeed);
+  // Also add tasting to bottle if it exists
+  if(document.getElementById('qp-add-cave').checked){
+    let bottles=getBottles();
+    const exists=bottles.find(b=>b.name.toLowerCase()===qpSelWine.name.toLowerCase());
+    if(!exists){bottles.push({id:'b_'+Date.now(),name:qpSelWine.name,producer:qpSelWine.producer||'',appellation:qpSelWine.appellation||'',vintage:qpSelWine.vintage||2022,qty:1,price:0,color:qpSelWine.color,from:null,until:null,location:'',notes:'',tastings:[{score:qpScore,nose:tags.join(', '),palate:txt,finish:'',date:new Date().toISOString().slice(0,10)}]});}
+    else if(exists) exists.tastings.push({score:qpScore,nose:tags.join(', '),palate:txt,finish:'',date:new Date().toISOString().slice(0,10)});
+    saveBottles(bottles);
+  }
+  closeModal('modal-qp');
+  renderCave(curFilter); renderFullFeed(); updateStats();
+  toast('Dégustation publiée ! 🍷');
+  ['m-name','m-prod','m-app','m-year','qp-text','qp-accord'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
+  document.querySelectorAll('.taste-tag').forEach(t=>t.classList.remove('active'));
+}
+
+/* ═══════════════════════════
+   FULL FEED — mélange public + user
+   ═══════════════════════════ */
+function renderFullFeed(){
+  const myFeed = getUserFeed();
+  const combined = [...myFeed, ...PUBLIC_FEED].slice(0,20);
+  const mkCard=(f,i,arr)=>{
+    const img=f.img||WINE_IMGS[f.color];
+    const stars=Array.from({length:5},(_,k)=>`<span class="ffc-star ${k<Math.round(f.score)?'lit':'dim'}">★</span>`).join('');
+    return `<div class="ffc"><div class="ffc-bar" style="background:${CBAR[f.color]}"></div><div class="ffc-body"><div class="ffc-ur"><div class="ffc-av" style="background:${f.bg||'#1a3a50'}">${f.ini||'?'}</div><div><div class="ffc-un">${f.user}</div><div class="ffc-time">${f.time}</div></div></div><div class="ffc-wine"><div class="ffc-thumb"><img src="${img}" alt="${f.wine}" loading="lazy"></div><div><div class="ffc-wname">${f.wine}</div><div class="ffc-wapp">${f.app}</div><div class="ffc-stars">${stars}</div></div></div><div class="ffc-tags">${f.tags.map(t=>`<span class="ffc-tag">#${t}</span>`).join('')}</div><div class="ffc-text">"${f.text}"</div>${f.accord?`<div style="font-size:11px;color:var(--t2);margin-bottom:10px">🍽 Accord : ${f.accord}</div>`:''}<div class="ffc-actions"><button class="ffc-action ${f.liked?'liked':''}" onclick="toggleLike(${i},this,'main')"><svg width="11" height="11" viewBox="0 0 24 24" fill="${f.liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>${f.likes}</button><button class="ffc-action"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Commenter</button><button class="ffc-action" onclick="openMsgPanel(0)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message</button></div></div></div>`;
+  };
+  const ff=document.getElementById('full-feed');
+  if(ff) ff.innerHTML=combined.map(mkCard).join('');
+  // Profile feed : only user's own posts
+  const pf=document.getElementById('profile-feed');
+  if(pf) pf.innerHTML=myFeed.length ? myFeed.map(mkCard).join('') : `<div class="empty"><div class="empty-title">Aucune dégustation partagée</div><div class="empty-sub">Partagez votre première dégustation !</div></div>`;
+}
+
+function toggleLike(i,btn,ctx){
+  // lightweight: just toggle UI (in prod, call Supabase update)
+  btn.classList.toggle('liked');
+  const cur = btn.classList.contains('liked');
+  const svg=btn.querySelector('svg');if(svg)svg.setAttribute('fill',cur?'currentColor':'none');
+}
+
+/* ═══════════════════════════
+   NEWS
+   ═══════════════════════════ */
+function newsCard(n,big){
+  return `<div class="news-card${big?' featured':''}"><div class="news-img${big?'':' '}" style="height:${big?'240px':'120px'}"><img src="${n.img}" alt="${n.title}" loading="lazy"><div class="news-ov"></div><span class="news-cat">${n.cat==='accord'?'Accord':n.cat==='region'?'Région':n.cat==='sortie'?'Sortie':'Article'}</span></div><div class="news-body"><div><div class="news-title">${n.title}</div><div class="news-excerpt">${n.excerpt}</div></div><div class="news-meta"><div class="news-author-av">${n.author[0]}</div>${n.author} · ${n.time} de lecture · ${n.date}<div class="news-read">Lire <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div></div></div>`;
+}
+function renderNewsPreview(){
+  const el=document.getElementById('news-preview');
+  if(!el)return;
+  el.innerHTML=newsCard(NEWS_DATA[0],true)+NEWS_DATA.slice(1,3).map(n=>newsCard(n,false)).join('');
+}
+let newsFilter='all';
+function filterNews(f,btn){
+  newsFilter=f;
+  document.querySelectorAll('#page-news .chip').forEach(c=>c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderNewsFullGrid(f);
+}
+function renderNewsFullGrid(f){
+  const el=document.getElementById('news-full-grid');if(!el)return;
+  const list=f==='all'?NEWS_DATA:NEWS_DATA.filter(n=>n.cat===f);
+  if(!list.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-title">Aucun contenu dans cette catégorie</div></div>`;return;}
+  el.innerHTML=newsCard(list[0],true)+list.slice(1).map(n=>newsCard(n,false)).join('');
+}
+
+/* ═══════════════════════════
+   HERO + TRENDING
+   ═══════════════════════════ */
+function renderHeroCards(){
+  document.getElementById('hero-cards').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px">`+TRENDING.slice(0,3).map(w=>`<div class="hcard" onclick="showPage('decouverte',null)"><div class="hcard-thumb"><img src="${WINE_IMGS[w.color]}" alt="${w.name}" loading="lazy"></div><div style="flex:1;min-width:0"><div class="hcard-name">${w.name}</div><div class="hcard-meta">${w.producer} · ${w.vintage}</div><div class="hcard-score">★ ${w.score}</div></div><div class="hcard-rank">#${w.rank}</div></div>`).join('')+`</div>`;
+}
+function renderTrending(){
+  document.getElementById('trending-grid').innerHTML=TRENDING.map(w=>`<div class="tw"><div class="tw-img"><img src="${WINE_IMGS[w.color]}" alt="${w.name}" loading="lazy"><div class="tw-ov"></div><span class="tw-rank">#${w.rank}</span><span class="tw-yr">${w.vintage}</span></div><div class="tw-body"><div class="tw-name">${w.name}</div><div class="tw-prod">${w.producer}</div><div class="tw-foot"><div class="tw-score">★ ${w.score}</div><div class="tw-badge">En vogue</div></div><div class="tw-taste">"${w.taste}"</div></div></div>`).join('');
+}
+
+/* ═══════════════════════════
+   FEED STRIP (accueil)
+   ═══════════════════════════ */
+function renderFeedStrip(){
+  document.getElementById('feed-strip').innerHTML=PUBLIC_FEED.slice(0,3).map((f,i)=>{
+    const stars=Array.from({length:5},(_,k)=>`<span class="fsc-star ${k<Math.round(f.score)?'lit':'dim'}">★</span>`).join('');
+    return `<div class="fsc"><div class="fsc-bar" style="background:${CBAR[f.color]}"></div><div class="fsc-body"><div class="fsc-ur"><div class="fsc-av" style="background:${f.bg}">${f.ini}</div><div><div class="fsc-un">${f.user}</div><div class="fsc-time">${f.time}</div></div></div><div class="fsc-wine"><div class="fsc-thumb"><img src="${WINE_IMGS[f.color]}" alt="${f.wine}" loading="lazy"></div><div><div class="fsc-wname">${f.wine}</div><div class="fsc-wapp">${f.app}</div><div class="fsc-stars">${stars}</div></div></div><div class="fsc-text">"${f.text}"</div><div class="fsc-tags">${f.tags.map(t=>`<span class="fsc-tag">#${t}</span>`).join('')}</div><div class="fsc-actions"><button class="fsc-action ${f.liked?'liked':''}" onclick="event.stopPropagation();sLike(${i},this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="${f.liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>${f.likes}</button><button class="fsc-action" onclick="requireLogin(()=>openMsgPanel(${i%2}))">Message</button></div></div></div>`;
+  }).join('');
+}
+function sLike(i,btn){PUBLIC_FEED[i].liked=!PUBLIC_FEED[i].liked;PUBLIC_FEED[i].likes+=PUBLIC_FEED[i].liked?1:-1;btn.classList.toggle('liked',PUBLIC_FEED[i].liked);btn.querySelector('svg').setAttribute('fill',PUBLIC_FEED[i].liked?'currentColor':'none');btn.lastChild.textContent=' '+PUBLIC_FEED[i].likes;}
+
+/* ═══════════════════════════
+   SUGGESTIONS
+   ═══════════════════════════ */
+function renderSuggestions(){
+  const el=document.getElementById('suggestions');if(!el)return;
+  el.innerHTML=SUGGS.map((s,i)=>`<div class="sug-i"><div class="sug-av" style="background:${s.bg}">${s.ini}</div><div><div class="sug-name">${s.name}</div><div class="sug-sub">${s.sub}</div></div><button class="btn-follow ${s.following?'following':''}" onclick="toggleFollow(${i},this)">${s.following?'Suivi ✓':'Suivre'}</button></div>`).join('');
+}
+function toggleFollow(i,btn){SUGGS[i].following=!SUGGS[i].following;btn.classList.toggle('following',SUGGS[i].following);btn.textContent=SUGGS[i].following?'Suivi ✓':'Suivre';toast(SUGGS[i].following?`Vous suivez ${SUGGS[i].name}`:`Vous ne suivez plus ${SUGGS[i].name}`);}
+
+/* ═══════════════════════════
+   DÉCOUVERTE
+   ═══════════════════════════ */
+function renderDisco(){
+  const g=document.getElementById('disco-grid');if(!g)return;
+  g.innerHTML=[...TRENDING,{id:'w008',name:"Côte-Rôtie La Landonne",producer:"E. Guigal",vintage:2016,color:"rouge",score:4.7,rank:6},{id:'w010',name:"Barolo DOCG",producer:"Giacomo Conterno",vintage:2018,color:"rouge",score:5,rank:7}].map(b=>`<div class="wcard"><div class="wcard-img"><img src="${WINE_IMGS[b.color]}" alt="${b.name}" loading="lazy"><div class="wcard-ov"></div><span class="wcard-yr">${b.vintage}</span></div><div class="wcard-body"><div class="wcard-name">${b.name}</div><div class="wcard-prod">${b.producer}</div><div class="wcard-foot"><div class="wcard-score">★ ${b.score}</div><button class="btn-p" style="padding:5px 12px;font-size:10px" onclick="requireLogin(()=>addDisco(event,'${b.name}','${b.color}',${b.vintage},'${b.producer}',''))">+ Cave</button></div></div></div>`).join('');
+}
+function addDisco(e,name,color,vintage,producer,appellation){
+  if(!currentUser){openAuth('login');return;}
+  e.stopPropagation();
+  let bottles=getBottles();
+  bottles.push({id:'b_'+Date.now(),name,producer,appellation,vintage,qty:1,price:0,color,from:null,until:null,location:'',notes:'Découverte communauté',tastings:[]});
+  saveBottles(bottles);renderCave(curFilter);updateStats();toast(`${name} ajouté à votre cave.`);
+}
+
+/* ═══════════════════════════
+   MESSAGING
+   ═══════════════════════════ */
+function renderConvList(){document.getElementById('conv-items').innerHTML=CONVS.map((c,i)=>`<div class="conv-item" onclick="openMsgPanel(${i})"><div class="conv-av" style="background:${c.bg}">${c.ini}</div><div style="flex:1;min-width:0"><div class="conv-name">${c.name}</div><div class="conv-preview">${c.preview}</div></div>${c.unread?`<div class="conv-unread">${c.unread}</div>`:''}</div>`).join('');}
+function toggleConvList(){requireLogin(()=>document.getElementById('conv-list').classList.toggle('open'));}
+function openMsgPanel(idx){
+  if(!currentUser){openAuth('login');return;}
+  curConv=idx;const c=CONVS[idx];
+  document.getElementById('conv-list').classList.remove('open');
+  document.getElementById('msg-av').textContent=c.ini;document.getElementById('msg-av').style.background=c.bg;
+  document.getElementById('msg-name').textContent=c.name;
+  const body=document.getElementById('msg-body');
+  body.innerHTML=c.msgs.map(m=>`<div style="display:flex;flex-direction:column;${m.me?'align-items:flex-end':'align-items:flex-start'}"><div class="msg-bubble ${m.me?'me':'them'}">${m.text}</div><div class="msg-time">${m.time}</div></div>`).join('');
+  body.scrollTop=body.scrollHeight;c.unread=0;renderConvList();
+  document.getElementById('msg-panel').classList.add('open');
+}
+function closeMsgPanel(){document.getElementById('msg-panel').classList.remove('open');}
+function sendMsg(){
+  const inp=document.getElementById('msg-input');const txt=inp.value.trim();if(!txt)return;
+  CONVS[curConv].msgs.push({me:true,text:txt,time:'maintenant'});
+  CONVS[curConv].preview=txt;openMsgPanel(curConv);inp.value='';
+  setTimeout(()=>{CONVS[curConv].msgs.push({me:false,text:"Super choix ! À bientôt autour d'un verre 🍷",time:'maintenant'});openMsgPanel(curConv);},1200);
+}
+
+/* ═══════════════════════════
+   UTILS
+   ═══════════════════════════ */
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function toast(msg){const t=document.getElementById('toast');t.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${msg}`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+document.addEventListener('click',e=>{if(!e.target.closest('#ws-wrap'))document.getElementById('ws-suggestions').classList.remove('open');});
+init();
+</script>
+</body>
+</html>
