@@ -768,14 +768,17 @@ select option{background:var(--bg2)}
 <div class="msg-panel" id="msg-panel"><div class="msg-header"><div class="msg-av" id="msg-av">T</div><div class="msg-hname" id="msg-name">Thomas V.</div><div class="msg-online"></div><button class="msg-hclose" onclick="closeMsgPanel()">✕</button></div><div class="msg-body" id="msg-body"></div><div class="msg-footer"><textarea class="msg-input" id="msg-input" placeholder="Votre message…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea><button class="msg-send" onclick="sendMsg()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ═══════════════════════════════════════════════════
-   MILLÉSIME v9 — Multi-user ready
-   Architecture :
-   - currentUser : null si déconnecté, objet sinon
-   - userBottles / userFeed : données PER USER (simulées
-     en localStorage pour le prototype, en Supabase en prod)
+   MILLÉSIME v10 — Supabase connecté
+   Base de données réelle, auth réelle, données par user
    ═══════════════════════════════════════════════════ */
+
+// ── SUPABASE CONFIG ──
+const SUPABASE_URL = 'https://fjyupzqxauxjfgmaahgl.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqeXVwenF4YXV4amZnbWFhaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzE3MzgsImV4cCI6MjA5MDAwNzczOH0.BaD3Pdjktg2Kzex03kCEG-Y3CJFz1BeRZFssIcXucb4';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ── CONSTANTS ──
 const WINE_IMGS={rouge:"https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&q=75",blanc:"https://images.unsplash.com/photo-1474722883778-792e7990302f?w=400&q=75",rosé:"https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=400&q=75",effervescent:"https://images.unsplash.com/photo-1505275350441-83dcda8eeef5?w=400&q=75"};
@@ -859,27 +862,100 @@ const ACCORD_SUGGEST={
 };
 
 /* ═══════════════════════════
-   USER STATE — clé de voûte
-   En production : remplacer par Supabase Auth
+   USER STATE — Supabase Auth
    ═══════════════════════════ */
-let currentUser = null; // null = déconnecté
+let currentUser = null;
+let currentProfile = null;
 
-// Données PER USER — en prod ce serait dans Supabase par user_id
-function getUserData(key, defaultVal) {
-  if(!currentUser) return defaultVal;
-  const stored = localStorage.getItem(`millesime_${currentUser.id}_${key}`);
-  return stored ? JSON.parse(stored) : defaultVal;
+// ── AUTH STATE LISTENER ──
+// Se déclenche automatiquement à chaque login/logout
+sb.auth.onAuthStateChange(async (event, session) => {
+  if(session?.user) {
+    currentUser = session.user;
+    // Charger le profil depuis la base
+    const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    currentProfile = data;
+    updateAuthUI();
+    showPage('cave', null);
+    toast(`Bienvenue, ${currentProfile?.prenom || currentUser.email.split('@')[0]} ! 🍷`);
+  } else {
+    currentUser = null;
+    currentProfile = null;
+    updateAuthUI();
+  }
+});
+
+// ── GETTERS SUPABASE ──
+async function getBottles() {
+  if(!currentUser) return [];
+  const { data } = await sb.from('bottles').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: false});
+  // Adapter le format pour compatibilité avec le reste du code
+  return (data || []).map(b => ({...b, tastings: []}));
 }
-function setUserData(key, val) {
+async function saveBottle(b) {
   if(!currentUser) return;
-  localStorage.setItem(`millesime_${currentUser.id}_${key}`, JSON.stringify(val));
+  const { data, error } = await sb.from('bottles').insert({
+    user_id: currentUser.id,
+    name: b.name, producer: b.producer, appellation: b.appellation,
+    vintage: b.vintage, qty: b.qty, price: b.price, color: b.color,
+    location: b.location, notes: b.notes
+  }).select().single();
+  return data;
+}
+async function deleteBottleDB(id) {
+  await sb.from('bottles').delete().eq('id', id).eq('user_id', currentUser.id);
+}
+async function getUserFeed() {
+  if(!currentUser) return [];
+  const { data } = await sb.from('tastings')
+    .select('*, profiles(prenom, nom, username)')
+    .eq('user_id', currentUser.id)
+    .order('created_at', {ascending: false})
+    .limit(20);
+  return (data || []).map(t => ({
+    id: t.id, user: `${t.profiles?.prenom || ''} ${t.profiles?.nom || ''}`.trim() || 'Moi',
+    ini: (t.profiles?.prenom?.[0] || 'M').toUpperCase(),
+    bg: '#1a3a50', wine: t.wine_name, app: `${t.wine_appellation || ''}${t.wine_vintage ? ' · '+t.wine_vintage : ''}`,
+    color: t.wine_color, text: t.palate || t.nose || 'Bonne dégustation.',
+    score: t.score, tags: t.tags || [], likes: t.likes_count || 0, liked: false,
+    time: timeAgo(t.created_at), accord: t.accord
+  }));
+}
+async function saveUserFeed(post) {
+  if(!currentUser) return;
+  await sb.from('tastings').insert({
+    user_id: currentUser.id,
+    wine_name: post.wine, wine_color: post.color,
+    wine_producer: post.producer || '', wine_appellation: post.appellation || '',
+    wine_vintage: post.vintage || null,
+    score: post.score, nose: post.tags?.join(', ') || '',
+    palate: post.text, tags: post.tags || [],
+    accord: post.accord || '', visibility: post.vis || 'public'
+  });
+}
+async function getPublicFeed() {
+  const { data } = await sb.from('tastings')
+    .select('*, profiles(prenom, nom, username)')
+    .eq('visibility', 'public')
+    .order('created_at', {ascending: false})
+    .limit(20);
+  return (data || []).map(t => ({
+    id: t.id, user: `${t.profiles?.prenom || ''} ${t.profiles?.nom || ''}`.trim() || 'Anonyme',
+    ini: (t.profiles?.prenom?.[0] || '?').toUpperCase(),
+    bg: '#1a3a50', wine: t.wine_name, app: `${t.wine_appellation || ''}${t.wine_vintage ? ' · '+t.wine_vintage : ''}`,
+    color: t.wine_color || 'rouge', text: t.palate || t.nose || '...',
+    score: t.score, tags: t.tags || [], likes: t.likes_count || 0, liked: false,
+    time: timeAgo(t.created_at), accord: t.accord
+  }));
 }
 
-// Getters/setters raccourcis
-function getBottles() { return getUserData('bottles', []); }
-function saveBottles(b) { setUserData('bottles', b); }
-function getUserFeed() { return getUserData('feed', []); }
-function saveUserFeed(f) { setUserData('feed', f); }
+function timeAgo(ts) {
+  const diff = (Date.now() - new Date(ts).getTime()) / 1000;
+  if(diff < 60) return 'à l\'instant';
+  if(diff < 3600) return `il y a ${Math.floor(diff/60)} min`;
+  if(diff < 86400) return `il y a ${Math.floor(diff/3600)}h`;
+  return `il y a ${Math.floor(diff/86400)}j`;
+}
 
 /* ═══════════════════════════
    INIT & NAV
@@ -894,7 +970,13 @@ function init(){
   renderDisco();
   renderSuggestions();
   renderConvList();
-  updateAuthUI();
+  // Vérifier si déjà connecté (session Supabase persistante)
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if(!session) {
+      updateAuthUI();
+    }
+    // Si session existe, onAuthStateChange s'en occupe automatiquement
+  });
 }
 
 function updateAuthUI(){
@@ -904,16 +986,15 @@ function updateAuthUI(){
   document.getElementById('main-nav').style.display = li ? 'flex' : 'none';
 
   if(li){
-    // Update hero CTAs for logged-in users
+    const prenom = currentProfile?.prenom || li.email.split('@')[0];
+    const initials = prenom[0].toUpperCase();
     const ctas = document.getElementById('hero-ctas');
     ctas.innerHTML = `<button class="btn-hp" onclick="showPage('cave',null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M8 7V5a2 2 0 00-4 0v2"/></svg>Voir ma cave</button><button class="btn-hs" onclick="openQuickPost()">Partager une dégustation</button>`;
-    const initials = (li.prenom[0]||(li.email[0]||'?')).toUpperCase();
     document.getElementById('nav-avatar').textContent = initials;
     document.getElementById('prof-av-letter').textContent = initials;
-    document.getElementById('prof-name-display').textContent = `${li.prenom} ${li.nom}`;
+    document.getElementById('prof-name-display').textContent = `${prenom} ${currentProfile?.nom || ''}`.trim();
     document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-logged-out').style.display = 'none';
-    // Cave: show content, hide lock
     document.getElementById('cave-locked').style.display = 'none';
     document.getElementById('wine-grid').style.display = '';
     renderCave();
@@ -948,7 +1029,7 @@ function showPage(p,btn){
 }
 
 /* ═══════════════════════════
-   AUTH
+   AUTH — Supabase réel
    ═══════════════════════════ */
 function openAuth(mode){ document.getElementById('modal-auth').classList.add('open'); switchAuth(mode); }
 function switchAuth(mode){
@@ -957,69 +1038,54 @@ function switchAuth(mode){
   document.getElementById('tab-login').classList.toggle('active', mode==='login');
   document.getElementById('tab-signup').classList.toggle('active', mode==='signup');
 }
-function doLogin(){
+async function doLogin(){
   const email = document.getElementById('a-email').value.trim();
   const pass = document.getElementById('a-pass').value;
   if(!email||!pass){ toast('Veuillez remplir tous les champs.'); return; }
-  // Prototype: create/retrieve user by email from localStorage
-  const userKey = 'millesime_user_' + btoa(email);
-  let user = localStorage.getItem(userKey);
-  if(user){ user = JSON.parse(user); }
-  else {
-    // Auto-create on first login (prototype only — en prod Supabase vérifie le mot de passe)
-    user = { id: btoa(email), email, prenom: email.split('@')[0], nom: '', avatar: email[0].toUpperCase() };
-    localStorage.setItem(userKey, JSON.stringify(user));
-  }
-  currentUser = user;
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if(error){ toast('Erreur : ' + error.message); return; }
   closeModal('modal-auth');
-  updateAuthUI();
-  showPage('cave', null);
-  toast(`Bienvenue, ${user.prenom} ! 🍷`);
 }
-function doSignup(){
+async function doSignup(){
   const first = document.getElementById('s-first').value.trim();
   const last = document.getElementById('s-last').value.trim();
   const email = document.getElementById('s-email').value.trim();
   const pass = document.getElementById('s-pass').value;
   if(!first||!email||!pass){ toast('Veuillez remplir tous les champs.'); return; }
-  const user = { id: btoa(email), email, prenom: first, nom: last, avatar: first[0].toUpperCase() };
-  localStorage.setItem('millesime_user_' + btoa(email), JSON.stringify(user));
-  currentUser = user;
+  const { error } = await sb.auth.signUp({
+    email, password: pass,
+    options: { data: { prenom: first, nom: last, username: email.split('@')[0] } }
+  });
+  if(error){ toast('Erreur : ' + error.message); return; }
   closeModal('modal-auth');
-  updateAuthUI();
-  showPage('cave', null);
-  toast(`Bienvenue sur Millésime, ${first} ! 🍷`);
+  toast(`Bienvenue sur Millésime, ${first} ! Vérifiez votre email. 🍷`);
 }
-function doOAuth(provider){
-  // Simule un OAuth — en prod : Supabase signInWithOAuth
-  const fake = { id: 'oauth_'+provider+'_'+Date.now(), email: provider.toLowerCase()+'@oauth.com', prenom: provider+' User', nom: '', avatar: provider[0] };
-  currentUser = fake;
-  closeModal('modal-auth');
-  updateAuthUI();
-  showPage('cave', null);
-  toast(`Connecté via ${provider} ! 🍷`);
+async function doOAuth(provider){
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: provider.toLowerCase(),
+    options: { redirectTo: window.location.href }
+  });
+  if(error) toast('Erreur : ' + error.message);
 }
-function doLogout(){
-  currentUser = null;
-  updateAuthUI();
+async function doLogout(){
+  await sb.auth.signOut();
   showPage('home', null);
   toast('Déconnecté avec succès.');
 }
 
 /* ═══════════════════════════
-   STATS
+   STATS — depuis Supabase
    ═══════════════════════════ */
-function updateStats(){
-  const bottles = getBottles();
-  const tot = bottles.reduce((s,b)=>s+b.qty,0);
-  const val = bottles.reduce((s,b)=>s+(b.price||0)*b.qty,0);
-  const allT = bottles.flatMap(b=>b.tastings||[]);
-  const avg = allT.length ? (allT.reduce((s,t)=>s+t.score,0)/allT.length).toFixed(1) : '—';
-  const vs = val>999 ? (val/1000).toFixed(1)+'k€' : val+'€';
+async function updateStats(){
+  const bottles = await getBottles();
+  const tot = bottles.reduce((s,b)=>s+(b.qty||1),0);
+  const val = bottles.reduce((s,b)=>s+(b.price||0)*(b.qty||1),0);
+  const vs = val>999?(val/1000).toFixed(1)+'k€':val+'€';
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
-  set('st-t',tot);set('st-r',bottles.length);set('st-n',avg);set('st-v',vs);
-  set('st2-t',tot);set('st2-r',bottles.length);set('st2-n',avg);set('st2-v',vs);
-  set('ps-b',tot);set('ps-deg',allT.length);
+  set('st-t',tot);set('st-r',bottles.length);set('st-n','—');set('st-v',vs);
+  set('st2-t',tot);set('st2-r',bottles.length);set('st2-n','—');set('st2-v',vs);
+  const prenom = currentProfile?.prenom || '';
+  set('ps-b',tot);
   const cs=document.getElementById('cave-sub');
   if(cs) cs.textContent = currentUser ? `${bottles.length} référence${bottles.length>1?'s':''} · ${tot} bouteille${tot>1?'s':''} au total` : 'Connectez-vous pour voir votre cave';
 }
@@ -1038,21 +1104,20 @@ function switchCaveTab(tab, btn){
 }
 
 /* ═══════════════════════════
-   CAVE — BOUTEILLES
+   CAVE — depuis Supabase
    ═══════════════════════════ */
-function renderCave(f='all'){
-  const bottles = getBottles();
-  const list = f==='all' ? bottles : bottles.filter(b=>b.color===f);
+async function renderCave(f='all'){
   const grid = document.getElementById('wine-grid');
   if(!grid) return;
+  if(!currentUser){ grid.innerHTML=''; return; }
+  grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">Chargement…</div>`;
+  const bottles = await getBottles();
+  const list = f==='all' ? bottles : bottles.filter(b=>b.color===f);
   if(!list.length){
     grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-title">Votre cave est vide</div><div class="empty-sub">Commencez par ajouter votre première bouteille.</div><button class="btn-p" onclick="openAddModal()">Ajouter une bouteille</button></div>`;
     return;
   }
-  grid.innerHTML=list.map(b=>{
-    const sc=b.tastings&&b.tastings.length?(b.tastings.reduce((s,t)=>s+t.score,0)/b.tastings.length).toFixed(1):null;
-    return `<div class="wcard" onclick="openDetail('${b.id}')"><div class="wcard-img"><img src="${WINE_IMGS[b.color]}" alt="${b.name}" loading="lazy"><div class="wcard-ov"></div><span class="wcard-yr">${b.vintage}</span></div><div class="wcard-body"><div class="wcard-name">${b.name}</div><div class="wcard-prod">${b.producer}${b.appellation?' · '+b.appellation:''}</div><div class="wcard-foot">${sc?`<div class="wcard-score">★ ${sc}</div>`:`<div style="font-size:10px;color:var(--t3)">Non dégusté</div>`}<div class="wcard-qty">${b.qty} btl</div></div></div></div>`;
-  }).join('');
+  grid.innerHTML=list.map(b=>`<div class="wcard" onclick="openDetail('${b.id}')"><div class="wcard-img"><img src="${WINE_IMGS[b.color]}" alt="${b.name}" loading="lazy"><div class="wcard-ov"></div><span class="wcard-yr">${b.vintage||'—'}</span></div><div class="wcard-body"><div class="wcard-name">${b.name}</div><div class="wcard-prod">${b.producer}${b.appellation?' · '+b.appellation:''}</div><div class="wcard-foot"><div style="font-size:10px;color:var(--t3)">Cave</div><div class="wcard-qty">${b.qty||1} btl</div></div></div></div>`).join('');
 }
 
 function filterW(f,btn){
@@ -1065,14 +1130,14 @@ function filterW(f,btn){
 function openAddModal(){ if(!currentUser){openAuth('login');return;} document.getElementById('modal-add').classList.add('open'); }
 function pickC(el){document.querySelectorAll('#cpick .copt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');selColor=el.dataset.c}
 
-function addBottle(){
+async function addBottle(){
   if(!currentUser){toast('Connectez-vous pour ajouter une bouteille.');return;}
   const name=document.getElementById('f-name').value.trim();
   if(!name){toast('Veuillez saisir le nom du vin.');return;}
-  const b={id:'b_'+Date.now(),name,producer:document.getElementById('f-prod').value.trim()||'Producteur inconnu',appellation:document.getElementById('f-app').value.trim()||'',vintage:parseInt(document.getElementById('f-year').value)||new Date().getFullYear(),qty:parseInt(document.getElementById('f-qty').value)||1,price:parseFloat(document.getElementById('f-price').value)||0,color:selColor,from:parseInt(document.getElementById('f-from').value)||null,until:parseInt(document.getElementById('f-until').value)||null,location:document.getElementById('f-loc').value.trim()||'',notes:document.getElementById('f-notes').value.trim()||'',tastings:[]};
-  const bottles = getBottles(); bottles.push(b); saveBottles(bottles);
+  const b={name,producer:document.getElementById('f-prod').value.trim()||'',appellation:document.getElementById('f-app').value.trim()||'',vintage:parseInt(document.getElementById('f-year').value)||null,qty:parseInt(document.getElementById('f-qty').value)||1,price:parseFloat(document.getElementById('f-price').value)||0,color:selColor,location:document.getElementById('f-loc').value.trim()||'',notes:document.getElementById('f-notes').value.trim()||''};
+  await saveBottle(b);
   closeModal('modal-add'); renderCave(curFilter); updateStats();
-  toast(`${b.name} ajouté à votre cave.`);
+  toast(`${b.name} ajouté à votre cave ! 🍾`);
   ['f-name','f-prod','f-app','f-year','f-price','f-from','f-until','f-loc','f-notes'].forEach(i=>{const e=document.getElementById(i);if(e)e.value=''});
   document.getElementById('f-qty').value='1';
 }
@@ -1086,8 +1151,8 @@ function openDetail(id){
   document.getElementById('dp-ov').classList.add('open');
 }
 function closeDetail(){document.getElementById('dp-ov').classList.remove('open')}
-function deleteBottle(id){
-  let bottles=getBottles(); bottles=bottles.filter(b=>b.id!==id); saveBottles(bottles);
+async function deleteBottle(id){
+  await deleteBottleDB(id);
   closeDetail(); renderCave(curFilter); updateStats(); toast('Bouteille supprimée.');
 }
 function prefillQP(id){const bottles=getBottles();const b=bottles.find(x=>x.id===id);openQuickPost();if(b){qpSelWine={name:b.name,producer:b.producer,appellation:b.appellation,color:b.color,vintage:b.vintage,img:WINE_IMGS[b.color]};renderQPStep1()}}
@@ -1222,21 +1287,23 @@ function qpPrev(){
   if(qpStep===2){qpStep=1;renderQPStep1();return;}
   if(qpStep===3){qpStep=2;document.getElementById('qp-step3').style.display='none';document.getElementById('qp-step2').style.display='block';document.getElementById('qp-title').textContent='Votre dégustation';document.getElementById('qp-prog').textContent='Étape 2 / 3';document.getElementById('qp-next-btn').textContent='Continuer →';updateQPSteps();}
 }
-function publishPost(){
+async function publishPost(){
   if(!currentUser)return;
   const tags=[...document.querySelectorAll('.taste-tag.active')].map(t=>t.textContent);
   const txt=document.getElementById('qp-text').value.trim();
   const accord=document.getElementById('qp-accord').value.trim();
-  const newPost={id:'p_'+Date.now(),user:currentUser.prenom+' '+(currentUser.nom||''),ini:(currentUser.prenom[0]||(currentUser.email[0]||'?')).toUpperCase(),bg:'#1a3a50',wine:qpSelWine.name,app:`${qpSelWine.appellation||'Cave'}${qpSelWine.vintage?' · '+qpSelWine.vintage:''}`,color:qpSelWine.color,text:txt||tags.join(', ')||'Excellent vin.',score:qpScore,tags:[qpSelWine.color,...tags.slice(0,2)],likes:0,liked:false,time:'à l\'instant',img:qpSelWine.img,accord};
-  // Save to user's personal feed
-  const myFeed=getUserFeed(); myFeed.unshift(newPost); saveUserFeed(myFeed);
-  // Also add tasting to bottle if it exists
+  await saveUserFeed({
+    wine: qpSelWine.name, color: qpSelWine.color,
+    producer: qpSelWine.producer||'', appellation: qpSelWine.appellation||'',
+    vintage: qpSelWine.vintage||null,
+    score: qpScore, tags, text: txt||'Bonne dégustation.',
+    accord, vis: qpVis
+  });
+  // Ajouter à la cave si coché et nouveau vin
   if(document.getElementById('qp-add-cave').checked){
-    let bottles=getBottles();
-    const exists=bottles.find(b=>b.name.toLowerCase()===qpSelWine.name.toLowerCase());
-    if(!exists){bottles.push({id:'b_'+Date.now(),name:qpSelWine.name,producer:qpSelWine.producer||'',appellation:qpSelWine.appellation||'',vintage:qpSelWine.vintage||2022,qty:1,price:0,color:qpSelWine.color,from:null,until:null,location:'',notes:'',tastings:[{score:qpScore,nose:tags.join(', '),palate:txt,finish:'',date:new Date().toISOString().slice(0,10)}]});}
-    else if(exists) exists.tastings.push({score:qpScore,nose:tags.join(', '),palate:txt,finish:'',date:new Date().toISOString().slice(0,10)});
-    saveBottles(bottles);
+    const bottles = await getBottles();
+    const exists = bottles.find(b=>b.name.toLowerCase()===qpSelWine.name.toLowerCase());
+    if(!exists) await saveBottle({name:qpSelWine.name,producer:qpSelWine.producer||'',appellation:qpSelWine.appellation||'',vintage:qpSelWine.vintage||null,qty:1,price:0,color:qpSelWine.color,location:'',notes:''});
   }
   closeModal('modal-qp');
   renderCave(curFilter); renderFullFeed(); updateStats();
@@ -1246,21 +1313,23 @@ function publishPost(){
 }
 
 /* ═══════════════════════════
-   FULL FEED — mélange public + user
+   FULL FEED — depuis Supabase
    ═══════════════════════════ */
-function renderFullFeed(){
-  const myFeed = getUserFeed();
-  const combined = [...myFeed, ...PUBLIC_FEED].slice(0,20);
-  const mkCard=(f,i,arr)=>{
-    const img=f.img||WINE_IMGS[f.color];
+async function renderFullFeed(){
+  const myFeed = currentUser ? await getUserFeed() : [];
+  const publicFeed = await getPublicFeed();
+  // Mélanger : mes posts en premier, puis le reste
+  const myIds = new Set(myFeed.map(f=>f.id));
+  const combined = [...myFeed, ...publicFeed.filter(f=>!myIds.has(f.id))].slice(0,30);
+  const mkCard=(f,i)=>{
+    const img=WINE_IMGS[f.color]||WINE_IMGS.rouge;
     const stars=Array.from({length:5},(_,k)=>`<span class="ffc-star ${k<Math.round(f.score)?'lit':'dim'}">★</span>`).join('');
-    return `<div class="ffc"><div class="ffc-bar" style="background:${CBAR[f.color]}"></div><div class="ffc-body"><div class="ffc-ur"><div class="ffc-av" style="background:${f.bg||'#1a3a50'}">${f.ini||'?'}</div><div><div class="ffc-un">${f.user}</div><div class="ffc-time">${f.time}</div></div></div><div class="ffc-wine"><div class="ffc-thumb"><img src="${img}" alt="${f.wine}" loading="lazy"></div><div><div class="ffc-wname">${f.wine}</div><div class="ffc-wapp">${f.app}</div><div class="ffc-stars">${stars}</div></div></div><div class="ffc-tags">${f.tags.map(t=>`<span class="ffc-tag">#${t}</span>`).join('')}</div><div class="ffc-text">"${f.text}"</div>${f.accord?`<div style="font-size:11px;color:var(--t2);margin-bottom:10px">🍽 Accord : ${f.accord}</div>`:''}<div class="ffc-actions"><button class="ffc-action ${f.liked?'liked':''}" onclick="toggleLike(${i},this,'main')"><svg width="11" height="11" viewBox="0 0 24 24" fill="${f.liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>${f.likes}</button><button class="ffc-action"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Commenter</button><button class="ffc-action" onclick="openMsgPanel(0)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message</button></div></div></div>`;
+    return `<div class="ffc"><div class="ffc-bar" style="background:${CBAR[f.color]||CBAR.rouge}"></div><div class="ffc-body"><div class="ffc-ur"><div class="ffc-av" style="background:${f.bg||'#1a3a50'}">${f.ini||'?'}</div><div><div class="ffc-un">${f.user}</div><div class="ffc-time">${f.time}</div></div></div><div class="ffc-wine"><div class="ffc-thumb"><img src="${img}" alt="${f.wine}" loading="lazy"></div><div><div class="ffc-wname">${f.wine}</div><div class="ffc-wapp">${f.app}</div><div class="ffc-stars">${stars}</div></div></div><div class="ffc-tags">${(f.tags||[]).map(t=>`<span class="ffc-tag">#${t}</span>`).join('')}</div><div class="ffc-text">"${f.text}"</div>${f.accord?`<div style="font-size:11px;color:var(--t2);margin-bottom:10px">🍽 Accord : ${f.accord}</div>`:''}<div class="ffc-actions"><button class="ffc-action"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>${f.likes}</button><button class="ffc-action"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Commenter</button><button class="ffc-action" onclick="openMsgPanel(0)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message</button></div></div></div>`;
   };
   const ff=document.getElementById('full-feed');
-  if(ff) ff.innerHTML=combined.map(mkCard).join('');
-  // Profile feed : only user's own posts
+  if(ff) ff.innerHTML = combined.length ? combined.map(mkCard).join('') : `<div class="empty"><div class="empty-title">Aucune dégustation</div><div class="empty-sub">Soyez le premier à partager !</div></div>`;
   const pf=document.getElementById('profile-feed');
-  if(pf) pf.innerHTML=myFeed.length ? myFeed.map(mkCard).join('') : `<div class="empty"><div class="empty-title">Aucune dégustation partagée</div><div class="empty-sub">Partagez votre première dégustation !</div></div>`;
+  if(pf) pf.innerHTML = myFeed.length ? myFeed.map(mkCard).join('') : `<div class="empty"><div class="empty-title">Aucune dégustation partagée</div><div class="empty-sub">Partagez votre première dégustation !</div></div>`;
 }
 
 function toggleLike(i,btn,ctx){
